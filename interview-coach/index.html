@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WalkRight — Live Interview Coach</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3349;
+      --accent: #6c63ff;
+      --accent2: #4ade80;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --text: #e8eaf0;
+      --muted: #7b8099;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    #status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 10px;
+      background: var(--surface2);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+    .dot.live { background: var(--danger); animation: pulse 1.2s infinite; }
+    .dot.thinking { background: var(--warn); }
+    .dot.ready { background: var(--accent2); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Context bar ── */
+    #context-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #context-bar label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    #context-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 7px 12px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #context-input:focus { border-color: var(--accent); }
+    #context-input::placeholder { color: var(--muted); }
+
+    #api-key-btn {
+      padding: 7px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    #api-key-btn:hover { color: var(--text); border-color: var(--accent); }
+    #api-key-btn.set { color: var(--accent2); border-color: var(--accent2); }
+
+    /* ── Main panels ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .panel-action {
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid transparent;
+      background: none;
+      transition: all 0.15s;
+    }
+    .panel-action:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      scroll-behavior: smooth;
+    }
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-track { background: transparent; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Transcript ── */
+    #transcript-body { font-size: 15px; line-height: 1.7; }
+
+    .transcript-segment {
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      background: var(--surface2);
+      border-radius: var(--radius);
+      border-left: 3px solid var(--border);
+      transition: border-color 0.3s;
+    }
+    .transcript-segment.active {
+      border-left-color: var(--danger);
+      background: #1f2235;
+    }
+    .transcript-segment.sent { border-left-color: var(--accent); }
+    .segment-time {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .segment-text { color: var(--text); }
+    .interim-text { color: var(--muted); font-style: italic; }
+
+    #empty-transcript {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 60px;
+      line-height: 1.8;
+    }
+    #empty-transcript .big { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── Feedback ── */
+    #feedback-body { font-size: 14px; line-height: 1.7; }
+
+    .feedback-card {
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border-radius: var(--radius);
+      border-left: 3px solid var(--accent);
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .feedback-card.streaming { border-left-color: var(--warn); }
+    .feedback-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .feedback-tag {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(108,99,255,0.15);
+      color: var(--accent);
+    }
+    .feedback-tag.warn { background: rgba(245,158,11,0.15); color: var(--warn); }
+    .feedback-tag.good { background: rgba(74,222,128,0.15); color: var(--accent2); }
+    .feedback-time { font-size: 10px; color: var(--muted); margin-left: auto; }
+    .feedback-text { color: var(--text); }
+    .feedback-text ul { margin: 8px 0 0 16px; }
+    .feedback-text li { margin-bottom: 4px; }
+    .cursor {
+      display: inline-block; width: 2px; height: 14px;
+      background: var(--warn);
+      animation: blink 0.8s step-end infinite;
+      vertical-align: text-bottom; margin-left: 2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    #empty-feedback {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 60px;
+      line-height: 1.8;
+    }
+    #empty-feedback .big { font-size: 40px; margin-bottom: 12px; }
+
+    /* ── Footer / Controls ── */
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    #record-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 50px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--accent);
+      color: white;
+    }
+    #record-btn:hover { filter: brightness(1.1); transform: scale(1.02); }
+    #record-btn.recording {
+      background: var(--danger);
+      animation: recordPulse 2s infinite;
+    }
+    @keyframes recordPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+    }
+
+    #feedback-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 20px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface2);
+      color: var(--text);
+    }
+    #feedback-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #feedback-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #clear-btn {
+      padding: 12px 16px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface2);
+      color: var(--muted);
+    }
+    #clear-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── API Key Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      width: min(480px, 90vw);
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal h2 { font-size: 18px; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+    .modal label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+    .modal input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 16px;
+      font-family: monospace;
+    }
+    .modal input:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-primary {
+      padding: 9px 20px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-ghost {
+      padding: 9px 20px;
+      background: none;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── No speech support warning ── */
+    #no-speech {
+      display: none;
+      position: fixed; inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 40px;
+    }
+    #no-speech.show { display: flex; }
+    #no-speech h2 { font-size: 24px; margin-bottom: 12px; }
+    #no-speech p { color: var(--muted); max-width: 400px; line-height: 1.7; }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      main { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+      .panel { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- No Speech Support Warning -->
+<div id="no-speech">
+  <div style="font-size:48px;margin-bottom:16px">🎤</div>
+  <h2>Browser Not Supported</h2>
+  <p>Live transcription requires the Web Speech API.<br>Please open this app in <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong>.</p>
+</div>
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="api-modal">
+  <div class="modal">
+    <h2>🔑 Anthropic API Key</h2>
+    <p>Your key is stored only in your browser's local storage and never sent anywhere except directly to Anthropic's API.</p>
+    <label for="api-key-input">API Key</label>
+    <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off" />
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">Walk<span>Right</span></div>
+  <div class="header-right">
+    <div id="status-badge">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text">Ready</span>
+    </div>
+    <button id="api-key-btn" onclick="openModal()">🔑 API Key</button>
+  </div>
+</header>
+
+<!-- Context Bar -->
+<div id="context-bar">
+  <label for="context-input">Interview Context:</label>
+  <input
+    type="text"
+    id="context-input"
+    placeholder="e.g. Software Engineer at Google — Behavioral interview (STAR method)"
+  />
+</div>
+
+<!-- Main -->
+<main>
+  <!-- Transcript Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Live Transcript</span>
+      <button class="panel-action" onclick="clearTranscript()">Clear</button>
+    </div>
+    <div class="panel-body" id="transcript-body">
+      <div id="empty-transcript">
+        <div class="big">🎙️</div>
+        <div>Hit <strong>Start Recording</strong> and begin speaking.</div>
+        <div style="margin-top:6px;font-size:13px">Your words appear here in real time.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">AI Feedback</span>
+      <button class="panel-action" onclick="clearFeedback()">Clear</button>
+    </div>
+    <div class="panel-body" id="feedback-body">
+      <div id="empty-feedback">
+        <div class="big">💡</div>
+        <div>Feedback streams here as you speak.</div>
+        <div style="margin-top:6px;font-size:13px">Pause for ~4 seconds to trigger automatic feedback.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer Controls -->
+<footer>
+  <button id="record-btn" onclick="toggleRecording()">
+    <span id="record-icon">●</span>
+    <span id="record-label">Start Recording</span>
+  </button>
+  <button id="feedback-btn" onclick="requestFeedbackNow()" disabled>
+    ✨ Get Feedback Now
+  </button>
+  <button id="clear-btn" onclick="clearAll()">Clear All</button>
+</footer>
+
+<script>
+const state = {
+  isRecording: false,
+  apiKey: localStorage.getItem('wr_api_key') || '',
+  transcript: [],
+  activeSegmentId: null,
+  segmentIdCounter: 0,
+  silenceTimer: null,
+  feedbackInProgress: false,
+};
+
+const SILENCE_MS = 4000;
+const MIN_WORDS = 10;
+
+const transcriptBody = document.getElementById('transcript-body');
+const feedbackBody = document.getElementById('feedback-body');
+const emptyTranscript = document.getElementById('empty-transcript');
+const emptyFeedback = document.getElementById('empty-feedback');
+const recordBtn = document.getElementById('record-btn');
+const feedbackBtn = document.getElementById('feedback-btn');
+const recordIcon = document.getElementById('record-icon');
+const recordLabel = document.getElementById('record-label');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+const apiKeyBtn = document.getElementById('api-key-btn');
+const contextInput = document.getElementById('context-input');
+
+// Check browser support
+if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+  document.getElementById('no-speech').classList.add('show');
+}
+
+// Restore saved API key
+if (state.apiKey) {
+  apiKeyBtn.classList.add('set');
+  apiKeyBtn.textContent = '🔑 Key Set';
+}
+
+// ── Speech Recognition ────────────────────────────────────────────────────
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+
+function initRecognition() {
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => {
+    setStatus('live', 'Recording...');
+    recordBtn.classList.add('recording');
+    recordIcon.textContent = '■';
+    recordLabel.textContent = 'Stop Recording';
+    feedbackBtn.disabled = false;
+    state.isRecording = true;
+  };
+
+  recognition.onend = () => {
+    // Auto-restart to keep continuous recording
+    if (state.isRecording) {
+      setTimeout(() => { try { recognition.start(); } catch(e) {} }, 200);
+    }
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed') {
+      alert('Microphone access denied. Please allow microphone access and refresh.');
+      stopRecording();
+    }
+  };
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    let final = '';
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const r = event.results[i];
+      if (r.isFinal) final += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+
+    if (final) {
+      appendFinal(final.trim());
+      resetSilenceTimer();
+    }
+    setInterim(interim);
+  };
+}
+
+function appendFinal(text) {
+  if (!text) return;
+  emptyTranscript.style.display = 'none';
+
+  if (state.activeSegmentId === null) {
+    const id = ++state.segmentIdCounter;
+    state.activeSegmentId = id;
+    state.transcript.push({ id, time: new Date(), text: '' });
+
+    const el = document.createElement('div');
+    el.className = 'transcript-segment active';
+    el.id = 'seg-' + id;
+    el.innerHTML = `
+      <div class="segment-time">${formatTime(new Date())}</div>
+      <div class="segment-text" id="seg-text-${id}"></div>
+      <div class="interim-text" id="seg-interim-${id}"></div>
+    `;
+    transcriptBody.appendChild(el);
+  }
+
+  const seg = state.transcript.find(s => s.id === state.activeSegmentId);
+  if (seg) {
+    seg.text += (seg.text ? ' ' : '') + text;
+    document.getElementById('seg-text-' + state.activeSegmentId).textContent = seg.text;
+  }
+  scrollTo(transcriptBody);
+}
+
+function setInterim(text) {
+  if (state.activeSegmentId !== null) {
+    const el = document.getElementById('seg-interim-' + state.activeSegmentId);
+    if (el) el.textContent = text;
+  }
+}
+
+function sealSegment() {
+  if (state.activeSegmentId !== null) {
+    const el = document.getElementById('seg-' + state.activeSegmentId);
+    if (el) {
+      el.classList.remove('active');
+      el.classList.add('sent');
+      const interim = document.getElementById('seg-interim-' + state.activeSegmentId);
+      if (interim) interim.textContent = '';
+    }
+    state.activeSegmentId = null;
+  }
+}
+
+// ── Silence → auto feedback ───────────────────────────────────────────────
+function resetSilenceTimer() {
+  clearTimeout(state.silenceTimer);
+  state.silenceTimer = setTimeout(() => {
+    sealSegment();
+    const words = state.transcript.map(s => s.text).join(' ').split(/\s+/).filter(Boolean).length;
+    if (words >= MIN_WORDS && !state.feedbackInProgress) requestFeedback();
+  }, SILENCE_MS);
+}
+
+// ── Claude API Feedback ───────────────────────────────────────────────────
+async function requestFeedback() {
+  if (!state.apiKey) { openModal(); return; }
+
+  const transcript = state.transcript.map(s => s.text).filter(Boolean).join('\n\n');
+  if (!transcript.trim()) return;
+
+  state.feedbackInProgress = true;
+  setStatus('thinking', 'Getting feedback...');
+  emptyFeedback.style.display = 'none';
+
+  const context = contextInput.value.trim() || 'a job interview';
+
+  const card = document.createElement('div');
+  card.className = 'feedback-card streaming';
+  card.innerHTML = `
+    <div class="feedback-meta">
+      <span class="feedback-tag warn">Analyzing...</span>
+      <span class="feedback-time">${formatTime(new Date())}</span>
+    </div>
+    <div class="feedback-text" id="stream-out"></div>
+  `;
+  feedbackBody.appendChild(card);
+  scrollTo(feedbackBody);
+
+  const out = document.getElementById('stream-out');
+  let buffer = '';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-8',
+        max_tokens: 500,
+        stream: true,
+        system: `You are a live interview coach giving real-time feedback during an interview.
+
+Context: ${context}
+
+Rules:
+- 3–5 bullet points only, keep it short
+- Use ✅ for strengths, ⚠️ for improvements, 💡 for tips
+- Focus on: structure (STAR), clarity, specifics, impact
+- Be direct and encouraging
+- Do NOT repeat what they said`,
+        messages: [{
+          role: 'user',
+          content: `Here's what I said:\n\n${transcript}\n\nGive me quick feedback on my answer.`
+        }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const lines = decoder.decode(value, { stream: true }).split('\n');
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.delta?.text) {
+            buffer += parsed.delta.text;
+            out.innerHTML = renderFeedback(buffer) + '<span class="cursor"></span>';
+            scrollTo(feedbackBody);
+          }
+        } catch {}
+      }
+    }
+
+    out.innerHTML = renderFeedback(buffer);
+    card.classList.remove('streaming');
+    card.querySelector('.feedback-tag').className = 'feedback-tag good';
+    card.querySelector('.feedback-tag').textContent = 'Feedback';
+
+  } catch (err) {
+    out.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}</span>`;
+    card.classList.remove('streaming');
+    if (err.message.includes('401') || err.message.includes('invalid_api_key')) openModal();
+  }
+
+  state.feedbackInProgress = false;
+  setStatus(state.isRecording ? 'live' : 'ready', state.isRecording ? 'Recording...' : 'Ready');
+}
+
+function renderFeedback(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean)
+    .map(l => `<div style="margin-bottom:6px">${l}</div>`).join('');
+}
+
+async function requestFeedbackNow() {
+  sealSegment();
+  if (!state.feedbackInProgress) await requestFeedback();
+}
+
+// ── Recording ─────────────────────────────────────────────────────────────
+function toggleRecording() {
+  state.isRecording ? stopRecording() : startRecording();
+}
+
+function startRecording() {
+  if (!state.apiKey) { openModal(); return; }
+  initRecognition();
+  try { recognition.start(); } catch(e) { console.error(e); }
+}
+
+function stopRecording() {
+  state.isRecording = false;
+  clearTimeout(state.silenceTimer);
+  sealSegment();
+  try { recognition.stop(); } catch(e) {}
+  recordBtn.classList.remove('recording');
+  recordIcon.textContent = '●';
+  recordLabel.textContent = 'Start Recording';
+  feedbackBtn.disabled = true;
+  setStatus('ready', 'Ready');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function setStatus(type, text) {
+  statusDot.className = 'dot' + (type ? ' ' + type : '');
+  statusText.textContent = text;
+}
+
+function formatTime(d) {
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function scrollTo(el) {
+  requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+}
+
+function clearTranscript() {
+  state.transcript = [];
+  state.activeSegmentId = null;
+  transcriptBody.innerHTML = '';
+  transcriptBody.appendChild(emptyTranscript);
+  emptyTranscript.style.display = '';
+}
+
+function clearFeedback() {
+  feedbackBody.innerHTML = '';
+  feedbackBody.appendChild(emptyFeedback);
+  emptyFeedback.style.display = '';
+}
+
+function clearAll() { clearTranscript(); clearFeedback(); }
+
+// ── Modal ─────────────────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('api-modal').classList.add('open');
+  const input = document.getElementById('api-key-input');
+  input.value = state.apiKey;
+  setTimeout(() => input.focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('api-modal').classList.remove('open');
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return;
+  state.apiKey = key;
+  localStorage.setItem('wr_api_key', key);
+  apiKeyBtn.classList.add('set');
+  apiKeyBtn.textContent = '🔑 Key Set';
+  closeModal();
+}
+
+document.getElementById('api-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.getElementById('api-key-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveApiKey();
+});
+</script>
+</body>
+</html>
