@@ -19,6 +19,8 @@
       --text: #e8eaf0;
       --muted: #7b8099;
       --radius: 12px;
+      --col-a: #6c63ff;
+      --col-b: #ec4899;
     }
 
     body {
@@ -36,393 +38,279 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 20px;
+      padding: 10px 20px;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
       flex-shrink: 0;
     }
-    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo { font-size: 17px; font-weight: 700; letter-spacing: -0.5px; }
     .logo span { color: var(--accent); }
-    .header-right { display: flex; align-items: center; gap: 10px; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
 
     #status-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--muted);
-      padding: 4px 10px;
-      background: var(--surface2);
-      border-radius: 20px;
-      border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted);
+      padding: 4px 10px; background: var(--surface2);
+      border-radius: 20px; border: 1px solid var(--border);
     }
     .dot {
       width: 7px; height: 7px; border-radius: 50%;
-      background: var(--muted);
-      transition: background 0.3s;
+      background: var(--muted); transition: background 0.3s;
     }
     .dot.live { background: var(--danger); animation: pulse 1.2s infinite; }
     .dot.thinking { background: var(--warn); }
     .dot.ready { background: var(--accent2); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+    .hdr-btn {
+      padding: 5px 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--muted); font-size: 12px;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
     }
+    .hdr-btn:hover { color: var(--text); border-color: var(--accent); }
+    .hdr-btn.set { color: var(--accent2); border-color: var(--accent2); }
 
     /* ── Context bar ── */
     #context-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 20px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
     #context-bar label { font-size: 12px; color: var(--muted); white-space: nowrap; }
     #context-input {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      padding: 7px 12px;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.2s;
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); padding: 6px 12px;
+      font-size: 13px; outline: none; transition: border-color 0.2s;
     }
     #context-input:focus { border-color: var(--accent); }
     #context-input::placeholder { color: var(--muted); }
 
-    #api-key-btn {
-      padding: 7px 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--muted);
-      font-size: 12px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.15s;
-    }
-    #api-key-btn:hover { color: var(--text); border-color: var(--accent); }
-    #api-key-btn.set { color: var(--accent2); border-color: var(--accent2); }
-
-    /* ── Main panels ── */
+    /* ── 3-column layout ── */
     main {
       flex: 1;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
+      grid-template-columns: 1fr 1fr 1fr;
       overflow: hidden;
     }
 
     .panel {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      display: flex; flex-direction: column; overflow: hidden;
       border-right: 1px solid var(--border);
     }
     .panel:last-child { border-right: none; }
 
     .panel-header {
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      flex-shrink: 0;
+      background: var(--surface); flex-shrink: 0;
     }
+    .panel-title-group { display: flex; align-items: center; gap: 8px; }
+    .panel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .panel-title {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--muted);
+      font-size: 11px; font-weight: 600; letter-spacing: 0.7px;
+      text-transform: uppercase; color: var(--muted);
     }
+    .panel-edit {
+      font-size: 11px; color: var(--muted); cursor: pointer;
+      padding: 2px 7px; border-radius: 5px; border: 1px solid transparent;
+      background: none; transition: all 0.15s; margin-left: 4px;
+    }
+    .panel-edit:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
     .panel-action {
-      font-size: 11px;
-      color: var(--muted);
-      cursor: pointer;
-      padding: 3px 8px;
-      border-radius: 5px;
-      border: 1px solid transparent;
-      background: none;
-      transition: all 0.15s;
+      font-size: 11px; color: var(--muted); cursor: pointer;
+      padding: 2px 7px; border-radius: 5px; border: 1px solid transparent;
+      background: none; transition: all 0.15s;
     }
     .panel-action:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
 
     .panel-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      scroll-behavior: smooth;
+      flex: 1; overflow-y: auto; padding: 14px;
     }
-    .panel-body::-webkit-scrollbar { width: 4px; }
-    .panel-body::-webkit-scrollbar-track { background: transparent; }
+    .panel-body::-webkit-scrollbar { width: 3px; }
     .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     /* ── Transcript ── */
-    #transcript-body { font-size: 15px; line-height: 1.7; }
-
     .transcript-segment {
-      margin-bottom: 16px;
-      padding: 12px 14px;
-      background: var(--surface2);
-      border-radius: var(--radius);
-      border-left: 3px solid var(--border);
-      transition: border-color 0.3s;
+      margin-bottom: 12px; padding: 10px 12px;
+      background: var(--surface2); border-radius: 10px;
+      border-left: 3px solid var(--border); transition: border-color 0.3s;
+      font-size: 14px; line-height: 1.6;
     }
-    .transcript-segment.active {
-      border-left-color: var(--danger);
-      background: #1f2235;
-    }
-    .transcript-segment.sent { border-left-color: var(--accent); }
-    .segment-time {
-      font-size: 10px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
+    .transcript-segment.active { border-left-color: var(--danger); background: #1f2235; }
+    .transcript-segment.sent { border-left-color: var(--border); }
+    .segment-time { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
     .segment-text { color: var(--text); }
-    .interim-text { color: var(--muted); font-style: italic; }
+    .interim-text { color: var(--muted); font-style: italic; font-size: 13px; }
 
-    #empty-transcript {
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-      margin-top: 60px;
-      line-height: 1.8;
-    }
-    #empty-transcript .big { font-size: 40px; margin-bottom: 12px; }
-
-    /* ── Feedback ── */
-    #feedback-body { font-size: 14px; line-height: 1.7; }
-
+    /* ── Feedback cards ── */
     .feedback-card {
-      margin-bottom: 14px;
-      padding: 14px 16px;
-      background: var(--surface2);
-      border-radius: var(--radius);
+      margin-bottom: 12px; padding: 12px 14px;
+      background: var(--surface2); border-radius: 10px;
       border-left: 3px solid var(--accent);
-      animation: slideIn 0.3s ease;
+      animation: slideIn 0.25s ease;
+      font-size: 13px; line-height: 1.65;
     }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes slideIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
     .feedback-card.streaming { border-left-color: var(--warn); }
-    .feedback-meta {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
+    .feedback-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
     .feedback-tag {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background: rgba(108,99,255,0.15);
-      color: var(--accent);
+      font-size: 10px; font-weight: 600; letter-spacing: 0.4px;
+      text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+      background: rgba(108,99,255,0.15); color: var(--accent);
     }
     .feedback-tag.warn { background: rgba(245,158,11,0.15); color: var(--warn); }
     .feedback-tag.good { background: rgba(74,222,128,0.15); color: var(--accent2); }
     .feedback-time { font-size: 10px; color: var(--muted); margin-left: auto; }
     .feedback-text { color: var(--text); }
-    .feedback-text ul { margin: 8px 0 0 16px; }
-    .feedback-text li { margin-bottom: 4px; }
+    .feedback-text div { margin-bottom: 5px; }
     .cursor {
-      display: inline-block; width: 2px; height: 14px;
-      background: var(--warn);
-      animation: blink 0.8s step-end infinite;
+      display: inline-block; width: 2px; height: 13px;
+      background: var(--warn); animation: blink 0.8s step-end infinite;
       vertical-align: text-bottom; margin-left: 2px;
     }
-    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes blink { 50%{opacity:0} }
 
-    #empty-feedback {
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-      margin-top: 60px;
-      line-height: 1.8;
+    .empty-state {
+      text-align: center; color: var(--muted);
+      font-size: 13px; margin-top: 50px; line-height: 1.9;
     }
-    #empty-feedback .big { font-size: 40px; margin-bottom: 12px; }
+    .empty-state .icon { font-size: 34px; margin-bottom: 10px; }
 
-    /* ── Footer / Controls ── */
+    /* ── Footer ── */
     footer {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 14px 20px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 12px 20px;
       border-top: 1px solid var(--border);
-      background: var(--surface);
-      flex-shrink: 0;
+      background: var(--surface); flex-shrink: 0;
     }
 
     #record-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 28px;
-      border-radius: 50px;
-      border: none;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: var(--accent);
-      color: white;
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 26px; border-radius: 50px; border: none;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; background: var(--accent); color: white;
     }
     #record-btn:hover { filter: brightness(1.1); transform: scale(1.02); }
-    #record-btn.recording {
-      background: var(--danger);
-      animation: recordPulse 2s infinite;
-    }
-    @keyframes recordPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
-      50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+    #record-btn.recording { background: var(--danger); animation: recPulse 2s infinite; }
+    @keyframes recPulse {
+      0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}
+      50%{box-shadow:0 0 0 9px rgba(239,68,68,0)}
     }
 
-    #feedback-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 12px 20px;
-      border-radius: 50px;
-      border: 1px solid var(--border);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: var(--surface2);
-      color: var(--text);
+    .ctrl-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 11px 18px; border-radius: 50px;
+      border: 1px solid var(--border); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+      background: var(--surface2); color: var(--text);
     }
-    #feedback-btn:hover { border-color: var(--accent); color: var(--accent); }
-    #feedback-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ctrl-btn.ghost { color: var(--muted); }
+    .ctrl-btn.ghost:hover { border-color: var(--danger); color: var(--danger); }
 
-    #clear-btn {
-      padding: 12px 16px;
-      border-radius: 50px;
-      border: 1px solid var(--border);
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: var(--surface2);
-      color: var(--muted);
-    }
-    #clear-btn:hover { border-color: var(--danger); color: var(--danger); }
-
-    /* ── API Key Modal ── */
+    /* ── Modals ── */
     .modal-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+      z-index: 100; align-items: center; justify-content: center;
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
-      width: min(480px, 90vw);
-      animation: modalIn 0.2s ease;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 26px; width: min(440px, 92vw);
+      animation: modalIn 0.18s ease;
     }
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(0.96) translateY(8px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
+    @keyframes modalIn { from{opacity:0;transform:scale(0.96) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal h2 { font-size: 17px; margin-bottom: 7px; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
+    .modal label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; margin-top: 12px; }
+    .modal label:first-of-type { margin-top: 0; }
+    .modal input, .modal textarea, .modal select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); padding: 8px 12px;
+      font-size: 13px; outline: none; transition: border-color 0.2s;
+      font-family: inherit;
     }
-    .modal h2 { font-size: 18px; margin-bottom: 8px; }
-    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
-    .modal label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
-    .modal input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      padding: 10px 14px;
-      font-size: 14px;
-      outline: none;
-      margin-bottom: 16px;
-      font-family: monospace;
-    }
-    .modal input:focus { border-color: var(--accent); }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--accent); }
+    .modal input[type=password] { font-family: monospace; }
+    .modal textarea { resize: vertical; min-height: 70px; }
+    .modal select { cursor: pointer; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
     .btn-primary {
-      padding: 9px 20px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: filter 0.15s;
+      padding: 8px 18px; background: var(--accent); color: white;
+      border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: filter 0.15s;
     }
     .btn-primary:hover { filter: brightness(1.1); }
     .btn-ghost {
-      padding: 9px 20px;
-      background: none;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.15s;
+      padding: 8px 18px; background: none; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 8px; font-size: 13px;
+      cursor: pointer; transition: all 0.15s;
     }
     .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
 
-    /* ── No speech support warning ── */
+    /* ── No speech ── */
     #no-speech {
-      display: none;
-      position: fixed; inset: 0;
-      background: var(--bg);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      text-align: center;
-      padding: 40px;
+      display: none; position: fixed; inset: 0; background: var(--bg);
+      z-index: 200; align-items: center; justify-content: center;
+      flex-direction: column; text-align: center; padding: 40px;
     }
     #no-speech.show { display: flex; }
-    #no-speech h2 { font-size: 24px; margin-bottom: 12px; }
-    #no-speech p { color: var(--muted); max-width: 400px; line-height: 1.7; }
+    #no-speech h2 { font-size: 22px; margin-bottom: 10px; }
+    #no-speech p { color: var(--muted); max-width: 380px; line-height: 1.7; }
 
-    /* ── Responsive ── */
-    @media (max-width: 700px) {
-      main { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; grid-template-rows: repeat(3, 1fr); }
       .panel { border-right: none; border-bottom: 1px solid var(--border); }
     }
   </style>
 </head>
 <body>
 
-<!-- No Speech Support Warning -->
+<!-- No Speech Support -->
 <div id="no-speech">
-  <div style="font-size:48px;margin-bottom:16px">🎤</div>
+  <div style="font-size:46px;margin-bottom:14px">🎤</div>
   <h2>Browser Not Supported</h2>
-  <p>Live transcription requires the Web Speech API.<br>Please open this app in <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong>.</p>
+  <p>Live transcription requires the Web Speech API. Please open this in <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong>.</p>
 </div>
 
 <!-- API Key Modal -->
 <div class="modal-overlay" id="api-modal">
   <div class="modal">
     <h2>🔑 Anthropic API Key</h2>
-    <p>Your key is stored only in your browser's local storage and never sent anywhere except directly to Anthropic's API.</p>
-    <label for="api-key-input">API Key</label>
+    <p>Stored only in your browser's local storage — sent only to Anthropic's API.</p>
+    <label>API Key</label>
     <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off" />
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveApiKey()">Save Key</button>
+      <button class="btn-ghost" onclick="closeModal('api-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveApiKey()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Coach Config Modal -->
+<div class="modal-overlay" id="coach-modal">
+  <div class="modal">
+    <h2 id="coach-modal-title">Configure Coach</h2>
+    <p>Customize this coach's name, model, and persona.</p>
+    <input type="hidden" id="coach-modal-id" />
+    <label>Name</label>
+    <input type="text" id="coach-name-input" placeholder="e.g. Strict Coach" />
+    <label>Model</label>
+    <select id="coach-model-input">
+      <option value="claude-opus-4-8">Claude Opus 4 (most thorough)</option>
+      <option value="claude-sonnet-4-6">Claude Sonnet 4 (faster)</option>
+      <option value="claude-haiku-4-5-20251001">Claude Haiku 4 (quickest)</option>
+    </select>
+    <label>Custom Instructions <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+    <textarea id="coach-instructions-input" placeholder="e.g. Be very direct and critical. Focus on what's missing."></textarea>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('coach-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveCoach()">Save</button>
     </div>
   </div>
 </div>
@@ -435,66 +323,117 @@
       <div class="dot" id="status-dot"></div>
       <span id="status-text">Ready</span>
     </div>
-    <button id="api-key-btn" onclick="openModal()">🔑 API Key</button>
+    <button class="hdr-btn" id="api-key-btn" onclick="openModal('api-modal')">🔑 API Key</button>
   </div>
 </header>
 
 <!-- Context Bar -->
 <div id="context-bar">
   <label for="context-input">Interview Context:</label>
-  <input
-    type="text"
-    id="context-input"
-    placeholder="e.g. Software Engineer at Google — Behavioral interview (STAR method)"
-  />
+  <input type="text" id="context-input"
+    placeholder="e.g. Software Engineer at Google — Behavioral interview" />
 </div>
 
-<!-- Main -->
+<!-- 3-Column Main -->
 <main>
-  <!-- Transcript Panel -->
-  <div class="panel">
+  <!-- Transcript -->
+  <div class="panel" id="panel-transcript">
     <div class="panel-header">
-      <span class="panel-title">Live Transcript</span>
+      <div class="panel-title-group">
+        <div class="panel-dot" style="background:var(--danger)"></div>
+        <span class="panel-title">Live Transcript</span>
+      </div>
       <button class="panel-action" onclick="clearTranscript()">Clear</button>
     </div>
     <div class="panel-body" id="transcript-body">
-      <div id="empty-transcript">
-        <div class="big">🎙️</div>
-        <div>Hit <strong>Start Recording</strong> and begin speaking.</div>
-        <div style="margin-top:6px;font-size:13px">Your words appear here in real time.</div>
+      <div class="empty-state" id="empty-transcript">
+        <div class="icon">🎙️</div>
+        <div>Hit <strong>Start Recording</strong> and speak.</div>
+        <div style="font-size:12px;margin-top:4px">Your words appear here in real time.</div>
       </div>
     </div>
   </div>
 
-  <!-- Feedback Panel -->
-  <div class="panel">
+  <!-- Coach A -->
+  <div class="panel" id="panel-a">
     <div class="panel-header">
-      <span class="panel-title">AI Feedback</span>
-      <button class="panel-action" onclick="clearFeedback()">Clear</button>
+      <div class="panel-title-group">
+        <div class="panel-dot" style="background:var(--col-a)" id="dot-a"></div>
+        <span class="panel-title" id="title-a">Coach A</span>
+        <button class="panel-edit" onclick="openCoachModal('a')" title="Configure">✎</button>
+      </div>
+      <button class="panel-action" onclick="clearFeedback('a')">Clear</button>
     </div>
-    <div class="panel-body" id="feedback-body">
-      <div id="empty-feedback">
-        <div class="big">💡</div>
-        <div>Feedback streams here as you speak.</div>
-        <div style="margin-top:6px;font-size:13px">Pause for ~4 seconds to trigger automatic feedback.</div>
+    <div class="panel-body" id="feedback-a">
+      <div class="empty-state" id="empty-a">
+        <div class="icon">🧠</div>
+        <div>Feedback streams here.</div>
+        <div style="font-size:12px;margin-top:4px">Pause ~4s to auto-trigger.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coach B -->
+  <div class="panel" id="panel-b">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="panel-dot" style="background:var(--col-b)" id="dot-b"></div>
+        <span class="panel-title" id="title-b">Coach B</span>
+        <button class="panel-edit" onclick="openCoachModal('b')" title="Configure">✎</button>
+      </div>
+      <button class="panel-action" onclick="clearFeedback('b')">Clear</button>
+    </div>
+    <div class="panel-body" id="feedback-b">
+      <div class="empty-state" id="empty-b">
+        <div class="icon">💡</div>
+        <div>Feedback streams here.</div>
+        <div style="font-size:12px;margin-top:4px">Pause ~4s to auto-trigger.</div>
       </div>
     </div>
   </div>
 </main>
 
-<!-- Footer Controls -->
+<!-- Footer -->
 <footer>
   <button id="record-btn" onclick="toggleRecording()">
     <span id="record-icon">●</span>
     <span id="record-label">Start Recording</span>
   </button>
-  <button id="feedback-btn" onclick="requestFeedbackNow()" disabled>
+  <button class="ctrl-btn" id="feedback-now-btn" onclick="requestFeedbackNow()" disabled>
     ✨ Get Feedback Now
   </button>
-  <button id="clear-btn" onclick="clearAll()">Clear All</button>
+  <button class="ctrl-btn ghost" onclick="clearAll()">Clear All</button>
 </footer>
 
 <script>
+// ── Coach configs ─────────────────────────────────────────────────────────
+const coaches = {
+  a: {
+    name: 'Coach A',
+    model: 'claude-opus-4-8',
+    instructions: 'Be thorough and analytical. Focus on structure (STAR method), completeness, and depth. Rate the answer and explain why.',
+    color: '#6c63ff',
+  },
+  b: {
+    name: 'Coach B',
+    model: 'claude-sonnet-4-6',
+    instructions: 'Be quick and punchy. Give 3 bullet points max. Focus on the single most important improvement and highlight the best thing they said.',
+    color: '#ec4899',
+  },
+};
+
+// Load saved configs
+['a', 'b'].forEach(id => {
+  const saved = localStorage.getItem('wr_coach_' + id);
+  if (saved) try { Object.assign(coaches[id], JSON.parse(saved)); } catch {}
+  applyCoachLabel(id);
+});
+
+function applyCoachLabel(id) {
+  document.getElementById('title-' + id).textContent = coaches[id].name;
+}
+
+// ── App state ─────────────────────────────────────────────────────────────
 const state = {
   isRecording: false,
   apiKey: localStorage.getItem('wr_api_key') || '',
@@ -502,20 +441,19 @@ const state = {
   activeSegmentId: null,
   segmentIdCounter: 0,
   silenceTimer: null,
-  feedbackInProgress: false,
+  feedbackInProgress: { a: false, b: false },
 };
 
 const SILENCE_MS = 4000;
-const MIN_WORDS = 10;
+const MIN_WORDS = 8;
 
+// ── DOM ───────────────────────────────────────────────────────────────────
 const transcriptBody = document.getElementById('transcript-body');
-const feedbackBody = document.getElementById('feedback-body');
 const emptyTranscript = document.getElementById('empty-transcript');
-const emptyFeedback = document.getElementById('empty-feedback');
 const recordBtn = document.getElementById('record-btn');
-const feedbackBtn = document.getElementById('feedback-btn');
 const recordIcon = document.getElementById('record-icon');
 const recordLabel = document.getElementById('record-label');
+const feedbackNowBtn = document.getElementById('feedback-now-btn');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const apiKeyBtn = document.getElementById('api-key-btn');
@@ -526,18 +464,14 @@ if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) 
   document.getElementById('no-speech').classList.add('show');
 }
 
-// Restore saved API key
-if (state.apiKey) {
-  apiKeyBtn.classList.add('set');
-  apiKeyBtn.textContent = '🔑 Key Set';
-}
+if (state.apiKey) markApiKeySet();
 
 // ── Speech Recognition ────────────────────────────────────────────────────
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition;
 
 function initRecognition() {
-  recognition = new SpeechRecognition();
+  recognition = new SR();
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
@@ -547,38 +481,29 @@ function initRecognition() {
     recordBtn.classList.add('recording');
     recordIcon.textContent = '■';
     recordLabel.textContent = 'Stop Recording';
-    feedbackBtn.disabled = false;
+    feedbackNowBtn.disabled = false;
     state.isRecording = true;
   };
 
   recognition.onend = () => {
-    // Auto-restart to keep continuous recording
-    if (state.isRecording) {
-      setTimeout(() => { try { recognition.start(); } catch(e) {} }, 200);
-    }
+    if (state.isRecording) setTimeout(() => { try { recognition.start(); } catch(e){} }, 200);
   };
 
   recognition.onerror = (e) => {
     if (e.error === 'not-allowed') {
-      alert('Microphone access denied. Please allow microphone access and refresh.');
+      alert('Microphone access denied. Allow microphone access and refresh.');
       stopRecording();
     }
   };
 
   recognition.onresult = (event) => {
-    let interim = '';
-    let final = '';
-
+    let interim = '', final = '';
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const r = event.results[i];
       if (r.isFinal) final += r[0].transcript;
       else interim += r[0].transcript;
     }
-
-    if (final) {
-      appendFinal(final.trim());
-      resetSilenceTimer();
-    }
+    if (final) { appendFinal(final.trim()); resetSilenceTimer(); }
     setInterim(interim);
   };
 }
@@ -596,7 +521,7 @@ function appendFinal(text) {
     el.className = 'transcript-segment active';
     el.id = 'seg-' + id;
     el.innerHTML = `
-      <div class="segment-time">${formatTime(new Date())}</div>
+      <div class="segment-time">${fmtTime(new Date())}</div>
       <div class="segment-text" id="seg-text-${id}"></div>
       <div class="interim-text" id="seg-interim-${id}"></div>
     `;
@@ -631,43 +556,63 @@ function sealSegment() {
   }
 }
 
-// ── Silence → auto feedback ───────────────────────────────────────────────
+// ── Silence timer ─────────────────────────────────────────────────────────
 function resetSilenceTimer() {
   clearTimeout(state.silenceTimer);
   state.silenceTimer = setTimeout(() => {
     sealSegment();
     const words = state.transcript.map(s => s.text).join(' ').split(/\s+/).filter(Boolean).length;
-    if (words >= MIN_WORDS && !state.feedbackInProgress) requestFeedback();
+    if (words >= MIN_WORDS) requestBothFeedbacks();
   }, SILENCE_MS);
 }
 
-// ── Claude API Feedback ───────────────────────────────────────────────────
-async function requestFeedback() {
-  if (!state.apiKey) { openModal(); return; }
+// ── Feedback ──────────────────────────────────────────────────────────────
+function requestBothFeedbacks() {
+  ['a', 'b'].forEach(id => {
+    if (!state.feedbackInProgress[id]) requestFeedback(id);
+  });
+}
+
+async function requestFeedback(coachId) {
+  if (!state.apiKey) { openModal('api-modal'); return; }
 
   const transcript = state.transcript.map(s => s.text).filter(Boolean).join('\n\n');
   if (!transcript.trim()) return;
 
-  state.feedbackInProgress = true;
-  setStatus('thinking', 'Getting feedback...');
-  emptyFeedback.style.display = 'none';
+  state.feedbackInProgress[coachId] = true;
+  updateThinkingStatus();
 
+  const coach = coaches[coachId];
   const context = contextInput.value.trim() || 'a job interview';
+  const feedbackBody = document.getElementById('feedback-' + coachId);
+  const emptyEl = document.getElementById('empty-' + coachId);
+  emptyEl.style.display = 'none';
 
   const card = document.createElement('div');
   card.className = 'feedback-card streaming';
+  card.style.borderLeftColor = coach.color;
   card.innerHTML = `
     <div class="feedback-meta">
       <span class="feedback-tag warn">Analyzing...</span>
-      <span class="feedback-time">${formatTime(new Date())}</span>
+      <span class="feedback-time">${fmtTime(new Date())}</span>
     </div>
-    <div class="feedback-text" id="stream-out"></div>
+    <div class="feedback-text" id="stream-${coachId}-${Date.now()}"></div>
   `;
   feedbackBody.appendChild(card);
   scrollTo(feedbackBody);
 
-  const out = document.getElementById('stream-out');
+  const outId = card.querySelector('.feedback-text').id;
+  const out = document.getElementById(outId);
   let buffer = '';
+
+  const systemPrompt = `You are a live interview coach giving real-time feedback during ${context}.
+
+Your persona: ${coach.instructions || 'Give helpful, balanced feedback.'}
+
+Rules:
+- Keep it concise and actionable
+- Use ✅ strengths, ⚠️ improvements, 💡 tips
+- Do NOT repeat what the candidate said back to them`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -679,22 +624,13 @@ async function requestFeedback() {
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-8',
-        max_tokens: 500,
+        model: coach.model,
+        max_tokens: 400,
         stream: true,
-        system: `You are a live interview coach giving real-time feedback during an interview.
-
-Context: ${context}
-
-Rules:
-- 3–5 bullet points only, keep it short
-- Use ✅ for strengths, ⚠️ for improvements, 💡 for tips
-- Focus on: structure (STAR), clarity, specifics, impact
-- Be direct and encouraging
-- Do NOT repeat what they said`,
+        system: systemPrompt,
         messages: [{
           role: 'user',
-          content: `Here's what I said:\n\n${transcript}\n\nGive me quick feedback on my answer.`
+          content: `Here's what I said:\n\n${transcript}\n\nGive me feedback on my answer.`
         }]
       })
     });
@@ -710,45 +646,52 @@ Rules:
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const lines = decoder.decode(value, { stream: true }).split('\n');
-      for (const line of lines) {
+      for (const line of decoder.decode(value, { stream: true }).split('\n')) {
         if (!line.startsWith('data: ')) continue;
         const raw = line.slice(6).trim();
         if (raw === '[DONE]') continue;
         try {
-          const parsed = JSON.parse(raw);
-          if (parsed.delta?.text) {
-            buffer += parsed.delta.text;
-            out.innerHTML = renderFeedback(buffer) + '<span class="cursor"></span>';
+          const p = JSON.parse(raw);
+          if (p.delta?.text) {
+            buffer += p.delta.text;
+            out.innerHTML = renderText(buffer) + '<span class="cursor"></span>';
             scrollTo(feedbackBody);
           }
         } catch {}
       }
     }
 
-    out.innerHTML = renderFeedback(buffer);
+    out.innerHTML = renderText(buffer);
     card.classList.remove('streaming');
+    card.style.borderLeftColor = coach.color;
     card.querySelector('.feedback-tag').className = 'feedback-tag good';
-    card.querySelector('.feedback-tag').textContent = 'Feedback';
+    card.querySelector('.feedback-tag').textContent = coach.name;
 
   } catch (err) {
     out.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}</span>`;
     card.classList.remove('streaming');
-    if (err.message.includes('401') || err.message.includes('invalid_api_key')) openModal();
+    if (err.message.includes('401') || err.message.includes('invalid_api_key')) openModal('api-modal');
   }
 
-  state.feedbackInProgress = false;
-  setStatus(state.isRecording ? 'live' : 'ready', state.isRecording ? 'Recording...' : 'Ready');
+  state.feedbackInProgress[coachId] = false;
+  updateThinkingStatus();
 }
 
-function renderFeedback(text) {
+function renderText(text) {
   return text.split('\n').map(l => l.trim()).filter(Boolean)
-    .map(l => `<div style="margin-bottom:6px">${l}</div>`).join('');
+    .map(l => `<div>${l}</div>`).join('');
 }
 
 async function requestFeedbackNow() {
   sealSegment();
-  if (!state.feedbackInProgress) await requestFeedback();
+  requestBothFeedbacks();
+}
+
+function updateThinkingStatus() {
+  const either = state.feedbackInProgress.a || state.feedbackInProgress.b;
+  if (either) setStatus('thinking', 'Getting feedback...');
+  else if (state.isRecording) setStatus('live', 'Recording...');
+  else setStatus('ready', 'Ready');
 }
 
 // ── Recording ─────────────────────────────────────────────────────────────
@@ -757,7 +700,7 @@ function toggleRecording() {
 }
 
 function startRecording() {
-  if (!state.apiKey) { openModal(); return; }
+  if (!state.apiKey) { openModal('api-modal'); return; }
   initRecognition();
   try { recognition.start(); } catch(e) { console.error(e); }
 }
@@ -770,8 +713,29 @@ function stopRecording() {
   recordBtn.classList.remove('recording');
   recordIcon.textContent = '●';
   recordLabel.textContent = 'Start Recording';
-  feedbackBtn.disabled = true;
+  feedbackNowBtn.disabled = true;
   setStatus('ready', 'Ready');
+}
+
+// ── Coach modal ───────────────────────────────────────────────────────────
+function openCoachModal(id) {
+  const coach = coaches[id];
+  document.getElementById('coach-modal-id').value = id;
+  document.getElementById('coach-modal-title').textContent = `Configure ${coach.name}`;
+  document.getElementById('coach-name-input').value = coach.name;
+  document.getElementById('coach-model-input').value = coach.model;
+  document.getElementById('coach-instructions-input').value = coach.instructions || '';
+  openModal('coach-modal');
+}
+
+function saveCoach() {
+  const id = document.getElementById('coach-modal-id').value;
+  coaches[id].name = document.getElementById('coach-name-input').value.trim() || coaches[id].name;
+  coaches[id].model = document.getElementById('coach-model-input').value;
+  coaches[id].instructions = document.getElementById('coach-instructions-input').value.trim();
+  localStorage.setItem('wr_coach_' + id, JSON.stringify(coaches[id]));
+  applyCoachLabel(id);
+  closeModal('coach-modal');
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -780,7 +744,7 @@ function setStatus(type, text) {
   statusText.textContent = text;
 }
 
-function formatTime(d) {
+function fmtTime(d) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
@@ -796,24 +760,37 @@ function clearTranscript() {
   emptyTranscript.style.display = '';
 }
 
-function clearFeedback() {
-  feedbackBody.innerHTML = '';
-  feedbackBody.appendChild(emptyFeedback);
-  emptyFeedback.style.display = '';
+function clearFeedback(id) {
+  const body = document.getElementById('feedback-' + id);
+  const empty = document.getElementById('empty-' + id);
+  body.innerHTML = '';
+  body.appendChild(empty);
+  empty.style.display = '';
 }
 
-function clearAll() { clearTranscript(); clearFeedback(); }
-
-// ── Modal ─────────────────────────────────────────────────────────────────
-function openModal() {
-  document.getElementById('api-modal').classList.add('open');
-  const input = document.getElementById('api-key-input');
-  input.value = state.apiKey;
-  setTimeout(() => input.focus(), 100);
+function clearAll() {
+  clearTranscript();
+  clearFeedback('a');
+  clearFeedback('b');
 }
 
-function closeModal() {
-  document.getElementById('api-modal').classList.remove('open');
+function markApiKeySet() {
+  apiKeyBtn.classList.add('set');
+  apiKeyBtn.textContent = '🔑 Key Set';
+}
+
+// ── Modals ────────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'api-modal') {
+    const input = document.getElementById('api-key-input');
+    input.value = state.apiKey;
+    setTimeout(() => input.focus(), 80);
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
 }
 
 function saveApiKey() {
@@ -821,13 +798,12 @@ function saveApiKey() {
   if (!key) return;
   state.apiKey = key;
   localStorage.setItem('wr_api_key', key);
-  apiKeyBtn.classList.add('set');
-  apiKeyBtn.textContent = '🔑 Key Set';
-  closeModal();
+  markApiKeySet();
+  closeModal('api-modal');
 }
 
-document.getElementById('api-modal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeModal();
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
 });
 document.getElementById('api-key-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveApiKey();
