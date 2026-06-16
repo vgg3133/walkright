@@ -565,6 +565,25 @@ function sealBlock() {
   }
 }
 
+// ── Mic access (held once per session so Record never re-prompts) ──────────
+let micStream = null;
+
+async function ensureMicAccess() {
+  // Reuse an already-granted, still-live stream — no second prompt.
+  if (micStream && micStream.active) return true;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return true;
+  } catch (e) {
+    if (e.name === 'NotAllowedError' || e.name === 'SecurityError') {
+      alert('Microphone access denied.\n\nClick the 🎤/lock icon in your browser address bar, set Microphone to "Allow", then try again.\n\nTip: open this app from an https:// link (e.g. GitHub Pages) so the browser remembers the permission permanently instead of asking each time.');
+    } else {
+      alert('Could not access microphone: ' + e.message);
+    }
+    return false;
+  }
+}
+
 // ── Record / Stop ─────────────────────────────────────────────────────────
 function toggleRecording() {
   if (state.isRecording) {
@@ -574,8 +593,10 @@ function toggleRecording() {
   }
 }
 
-function startRecording() {
+async function startRecording() {
   if (!state.keys.anthropic && !state.keys.openai) { openModal('api-modal'); return; }
+  const ok = await ensureMicAccess();
+  if (!ok) return;
   initRecognition();
   try { recognition.start(); } catch(e) { console.error(e); }
 }
