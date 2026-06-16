@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WalkRight — Live Response Coach</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3349;
+      --accent: #6c63ff;
+      --accent2: #4ade80;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --text: #e8eaf0;
+      --muted: #7b8099;
+      --col-a: #6c63ff;
+      --col-b: #ec4899;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .logo { font-size: 17px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .hdr-btn {
+      padding: 5px 12px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 7px;
+      color: var(--muted); font-size: 12px; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .hdr-btn:hover { color: var(--text); border-color: var(--accent); }
+    .hdr-btn.set { color: var(--accent2); border-color: var(--accent2); }
+
+    /* ── Context strip ── */
+    #context-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 18px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    #context-bar label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    #context-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); padding: 6px 11px;
+      font-size: 13px; outline: none; transition: border-color 0.2s;
+    }
+    #context-input:focus { border-color: var(--accent); }
+    #context-input::placeholder { color: var(--muted); }
+
+    /* ── 3-col layout ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      overflow: hidden;
+    }
+
+    .panel {
+      display: flex; flex-direction: column; overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      padding: 9px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+    .panel-title-group { display: flex; align-items: center; gap: 7px; }
+    .panel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .panel-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.7px;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .panel-edit {
+      font-size: 11px; color: var(--muted); cursor: pointer;
+      padding: 2px 6px; border-radius: 4px; border: 1px solid transparent;
+      background: none; transition: all 0.15s;
+    }
+    .panel-edit:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
+    .panel-action {
+      font-size: 11px; color: var(--muted); cursor: pointer;
+      padding: 2px 7px; border-radius: 4px; border: 1px solid transparent;
+      background: none; transition: all 0.15s;
+    }
+    .panel-action:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
+
+    .panel-body {
+      flex: 1; overflow-y: auto; padding: 14px;
+    }
+    .panel-body::-webkit-scrollbar { width: 3px; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Transcript ── */
+    .transcript-block {
+      margin-bottom: 10px; padding: 10px 12px;
+      background: var(--surface2); border-radius: 10px;
+      border-left: 3px solid var(--border);
+      font-size: 14px; line-height: 1.6;
+      transition: border-color 0.3s;
+    }
+    .transcript-block.active {
+      border-left-color: var(--danger);
+      background: #1d2030;
+    }
+    .block-time { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+    .block-text { color: var(--text); }
+    .interim-text { color: var(--muted); font-style: italic; font-size: 13px; }
+
+    /* ── Response cards ── */
+    .response-card {
+      margin-bottom: 12px; padding: 13px 15px;
+      background: var(--surface2); border-radius: 10px;
+      border-left: 3px solid var(--accent);
+      animation: slideIn 0.2s ease;
+      font-size: 13px; line-height: 1.7;
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+    .response-card.streaming { border-left-color: var(--warn); }
+    .card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .card-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; padding: 2px 7px; border-radius: 4px;
+    }
+    .card-tag.thinking { background: rgba(245,158,11,0.15); color: var(--warn); }
+    .card-tag.done { background: rgba(74,222,128,0.15); color: var(--accent2); }
+    .card-time { font-size: 10px; color: var(--muted); margin-left: auto; }
+    .card-body { color: var(--text); }
+    .card-body div { margin-bottom: 5px; }
+    .cursor {
+      display: inline-block; width: 2px; height: 13px;
+      background: var(--warn); animation: blink 0.7s step-end infinite;
+      vertical-align: text-bottom; margin-left: 2px;
+    }
+    @keyframes blink { 50%{opacity:0} }
+
+    .empty-state {
+      text-align: center; color: var(--muted);
+      font-size: 13px; margin-top: 50px; line-height: 2;
+    }
+    .empty-state .icon { font-size: 32px; margin-bottom: 10px; }
+
+    /* ── Big record button area ── */
+    footer {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; padding: 16px 20px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+    }
+
+    #record-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 44px; border-radius: 50px; border: none;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; background: var(--accent); color: white;
+      letter-spacing: 0.2px;
+    }
+    #record-btn:hover { filter: brightness(1.12); transform: scale(1.02); }
+    #record-btn.recording {
+      background: var(--danger);
+      animation: recPulse 1.8s infinite;
+    }
+    @keyframes recPulse {
+      0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.5)}
+      50%{box-shadow:0 0 0 12px rgba(239,68,68,0)}
+    }
+
+    .footer-hint {
+      font-size: 12px; color: var(--muted); text-align: center;
+    }
+    .footer-hint strong { color: var(--text); }
+
+    .footer-btns { display: flex; gap: 8px; }
+    .sm-btn {
+      padding: 7px 14px; border-radius: 20px;
+      border: 1px solid var(--border); font-size: 12px;
+      cursor: pointer; background: var(--surface2); color: var(--muted);
+      transition: all 0.15s;
+    }
+    .sm-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── Status pill ── */
+    #status-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted);
+      padding: 4px 10px; background: var(--surface2);
+      border-radius: 20px; border: 1px solid var(--border);
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
+    .dot.live { background: var(--danger); animation: pulse 1.2s infinite; }
+    .dot.thinking { background: var(--warn); }
+    .dot.ready { background: var(--accent2); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Modals ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; width: min(440px, 92vw);
+      animation: modalIn 0.18s ease;
+    }
+    @keyframes modalIn { from{opacity:0;transform:scale(0.96) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .modal h2 { font-size: 16px; margin-bottom: 6px; }
+    .modal p { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+    .modal label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; margin-top: 12px; }
+    .modal label:first-of-type { margin-top: 0; }
+    .modal input, .modal textarea, .modal select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--text); padding: 8px 11px;
+      font-size: 13px; outline: none; transition: border-color 0.2s; font-family: inherit;
+    }
+    .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--accent); }
+    .modal input[type=password] { font-family: monospace; }
+    .modal textarea { resize: vertical; min-height: 60px; }
+    .test-row { display: flex; gap: 6px; }
+    .test-row input { flex: 1; }
+    .test-result { font-size: 11px; margin-top: 4px; min-height: 15px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .btn-primary {
+      padding: 8px 18px; background: var(--accent); color: white;
+      border: none; border-radius: 7px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: filter 0.15s;
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-ghost {
+      padding: 8px 14px; background: none; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 7px; font-size: 13px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+
+    #no-speech {
+      display: none; position: fixed; inset: 0; background: var(--bg);
+      z-index: 200; align-items: center; justify-content: center;
+      flex-direction: column; text-align: center; padding: 40px;
+    }
+    #no-speech.show { display: flex; }
+
+    @media (max-width: 750px) {
+      main { grid-template-columns: 1fr; grid-template-rows: repeat(3, 1fr); }
+      .panel { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="no-speech">
+  <div style="font-size:44px;margin-bottom:14px">🎤</div>
+  <h2 style="margin-bottom:8px">Use Chrome or Edge</h2>
+  <p style="color:var(--muted);max-width:360px;line-height:1.7">This app needs the Web Speech API for live transcription. Safari doesn't support it.</p>
+</div>
+
+<!-- API Keys Modal -->
+<div class="modal-overlay" id="api-modal">
+  <div class="modal">
+    <h2>🔑 API Keys</h2>
+    <p>Stored only in your browser. Sent only to each provider's API. You only need the key(s) matching your coaches' providers.</p>
+    <label>Anthropic API Key <span style="font-weight:400">(Claude — starts with sk-ant-)</span></label>
+    <div class="test-row">
+      <input type="password" id="anthropic-key-input" placeholder="sk-ant-..." autocomplete="off" />
+      <button class="btn-ghost" onclick="testKey('anthropic')">Test</button>
+    </div>
+    <div class="test-result" id="anthropic-test-result"></div>
+    <label>OpenAI API Key <span style="font-weight:400">(ChatGPT — starts with sk-)</span></label>
+    <div class="test-row">
+      <input type="password" id="openai-key-input" placeholder="sk-..." autocomplete="off" />
+      <button class="btn-ghost" onclick="testKey('openai')">Test</button>
+    </div>
+    <div class="test-result" id="openai-test-result"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('api-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveApiKeys()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Coach Config Modal -->
+<div class="modal-overlay" id="coach-modal">
+  <div class="modal">
+    <h2 id="coach-modal-title">Configure Advisor</h2>
+    <input type="hidden" id="coach-modal-id" />
+    <label>Name</label>
+    <input type="text" id="coach-name-input" placeholder="e.g. Direct Advisor" />
+    <label>Provider</label>
+    <select id="coach-provider-input" onchange="populateModelOptions()">
+      <option value="anthropic">Anthropic (Claude)</option>
+      <option value="openai">OpenAI (ChatGPT)</option>
+    </select>
+    <label>Model</label>
+    <select id="coach-model-input"></select>
+    <label>Response style <span style="font-weight:400">(optional)</span></label>
+    <textarea id="coach-instructions-input" placeholder="e.g. Be very direct and concise. Give one strong response only."></textarea>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('coach-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveCoach()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">Walk<span>Right</span></div>
+  <div class="header-right">
+    <div id="status-badge"><div class="dot" id="status-dot"></div><span id="status-text">Ready</span></div>
+    <button class="hdr-btn" id="api-key-btn" onclick="openModal('api-modal')">🔑 API Keys</button>
+  </div>
+</header>
+
+<!-- Context -->
+<div id="context-bar">
+  <label for="context-input">Context:</label>
+  <input type="text" id="context-input"
+    placeholder="Optional — e.g. job interview for Software Engineer, sales call, difficult conversation with manager" />
+</div>
+
+<!-- Main columns -->
+<main>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="panel-dot" style="background:var(--danger)" id="rec-dot"></div>
+        <span class="panel-title">What They Said</span>
+      </div>
+      <button class="panel-action" onclick="clearTranscript()">Clear</button>
+    </div>
+    <div class="panel-body" id="transcript-body">
+      <div class="empty-state" id="empty-transcript">
+        <div class="icon">🎙️</div>
+        <div><strong>Press Record</strong> when the other person starts talking.</div>
+        <div>Press <strong>Stop</strong> when they finish.</div>
+        <div>Suggested responses appear instantly.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="panel-dot" style="background:var(--col-a)"></div>
+        <span class="panel-title" id="title-a">Advisor A</span>
+        <button class="panel-edit" onclick="openCoachModal('a')">✎</button>
+      </div>
+      <button class="panel-action" onclick="clearFeedback('a')">Clear</button>
+    </div>
+    <div class="panel-body" id="feedback-a">
+      <div class="empty-state" id="empty-a">
+        <div class="icon">💬</div>
+        <div>Suggested response appears here.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="panel-dot" style="background:var(--col-b)"></div>
+        <span class="panel-title" id="title-b">Advisor B</span>
+        <button class="panel-edit" onclick="openCoachModal('b')">✎</button>
+      </div>
+      <button class="panel-action" onclick="clearFeedback('b')">Clear</button>
+    </div>
+    <div class="panel-body" id="feedback-b">
+      <div class="empty-state" id="empty-b">
+        <div class="icon">💬</div>
+        <div>Suggested response appears here.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <button id="record-btn" onclick="toggleRecording()">
+    <span id="record-icon">●</span>
+    <span id="record-label">Record</span>
+  </button>
+  <div class="footer-hint" id="footer-hint">
+    Press <strong>Record</strong> when the other person starts talking
+  </div>
+  <div class="footer-btns">
+    <button class="sm-btn" onclick="clearAll()">Clear All</button>
+  </div>
+</footer>
+
+<script>
+// ── Coach defaults ────────────────────────────────────────────────────────
+const MODELS = {
+  anthropic: [
+    { id: 'claude-opus-4-8',         label: 'Claude Opus 4 (thorough)' },
+    { id: 'claude-sonnet-4-6',       label: 'Claude Sonnet 4 (fast)' },
+    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4 (fastest)' },
+  ],
+  openai: [
+    { id: 'gpt-4o',      label: 'GPT-4o (recommended)' },
+    { id: 'gpt-4o-mini', label: 'GPT-4o mini (faster)' },
+  ],
+};
+
+const coaches = {
+  a: { name: 'Advisor A', provider: 'anthropic', model: 'claude-opus-4-8',
+       instructions: 'Give a detailed, thoughtful response. Explain the reasoning briefly.', color: '#6c63ff' },
+  b: { name: 'Advisor B', provider: 'openai', model: 'gpt-4o',
+       instructions: 'Give one short, punchy response. Maximum 3 sentences. Be direct.', color: '#ec4899' },
+};
+
+// Load saved configs with migration
+['a','b'].forEach(id => {
+  const saved = localStorage.getItem('wr_coach_' + id);
+  if (saved) try { Object.assign(coaches[id], JSON.parse(saved)); } catch {}
+  const c = coaches[id];
+  if (c.model?.startsWith('gpt')) c.provider = 'openai';
+  else if (c.model?.startsWith('claude')) c.provider = 'anthropic';
+  if (!c.provider) c.provider = 'anthropic';
+  if (!MODELS[c.provider].some(m => m.id === c.model)) c.model = MODELS[c.provider][0].id;
+  document.getElementById('title-' + id).textContent = c.name;
+});
+
+// ── State ─────────────────────────────────────────────────────────────────
+const state = {
+  isRecording: false,
+  keys: {
+    anthropic: localStorage.getItem('wr_key_anthropic') || '',
+    openai:    localStorage.getItem('wr_key_openai') || '',
+  },
+  blocks: [],            // {id, time, text}
+  activeBlockId: null,
+  blockCounter: 0,
+  feedbackInProgress: { a: false, b: false },
+};
+
+// ── DOM ───────────────────────────────────────────────────────────────────
+const transcriptBody = document.getElementById('transcript-body');
+const emptyTranscript = document.getElementById('empty-transcript');
+const recordBtn      = document.getElementById('record-btn');
+const recordIcon     = document.getElementById('record-icon');
+const recordLabel    = document.getElementById('record-label');
+const statusDot      = document.getElementById('status-dot');
+const statusText     = document.getElementById('status-text');
+const footerHint     = document.getElementById('footer-hint');
+const apiKeyBtn      = document.getElementById('api-key-btn');
+const contextInput   = document.getElementById('context-input');
+
+if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+  document.getElementById('no-speech').classList.add('show');
+}
+if (state.keys.anthropic || state.keys.openai) markKeySet();
+
+// ── Speech Recognition ────────────────────────────────────────────────────
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+
+function initRecognition() {
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onstart = () => {
+    state.isRecording = true;
+    recordBtn.classList.add('recording');
+    recordIcon.textContent = '■';
+    recordLabel.textContent = 'Stop';
+    setStatus('live', 'Recording...');
+    footerHint.innerHTML = 'Press <strong>Stop</strong> when they finish speaking — responses appear instantly';
+  };
+
+  // Don't auto-restart — user controls start/stop manually
+  recognition.onend = () => {
+    if (state.isRecording) {
+      // Chrome sometimes stops mid-session; restart silently
+      try { recognition.start(); } catch(e) {}
+    }
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed') {
+      alert('Microphone access denied. Please allow mic access and refresh.');
+      stopRecording(false);
+    }
+  };
+
+  recognition.onresult = (event) => {
+    let interim = '', final = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const r = event.results[i];
+      if (r.isFinal) final += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    if (final) appendFinal(final.trim());
+    setInterim(interim);
+  };
+}
+
+function appendFinal(text) {
+  if (!text) return;
+  emptyTranscript.style.display = 'none';
+
+  if (state.activeBlockId === null) {
+    const id = ++state.blockCounter;
+    state.activeBlockId = id;
+    state.blocks.push({ id, time: new Date(), text: '' });
+    const el = document.createElement('div');
+    el.className = 'transcript-block active';
+    el.id = 'blk-' + id;
+    el.innerHTML = `
+      <div class="block-time">${fmtTime(new Date())}</div>
+      <div class="block-text" id="blk-text-${id}"></div>
+      <div class="interim-text" id="blk-interim-${id}"></div>`;
+    transcriptBody.appendChild(el);
+  }
+
+  const blk = state.blocks.find(b => b.id === state.activeBlockId);
+  if (blk) {
+    blk.text += (blk.text ? ' ' : '') + text;
+    document.getElementById('blk-text-' + state.activeBlockId).textContent = blk.text;
+  }
+  scrollTo(transcriptBody);
+}
+
+function setInterim(text) {
+  if (state.activeBlockId !== null) {
+    const el = document.getElementById('blk-interim-' + state.activeBlockId);
+    if (el) el.textContent = text;
+  }
+}
+
+function sealBlock() {
+  if (state.activeBlockId !== null) {
+    const el = document.getElementById('blk-' + state.activeBlockId);
+    if (el) {
+      el.classList.remove('active');
+      const interim = document.getElementById('blk-interim-' + state.activeBlockId);
+      if (interim) interim.textContent = '';
+    }
+    state.activeBlockId = null;
+  }
+}
+
+// ── Mic access (held once per session so Record never re-prompts) ──────────
+let micStream = null;
+
+async function ensureMicAccess() {
+  // Reuse an already-granted, still-live stream — no second prompt.
+  if (micStream && micStream.active) return true;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return true;
+  } catch (e) {
+    if (e.name === 'NotAllowedError' || e.name === 'SecurityError') {
+      alert('Microphone access denied.\n\nClick the 🎤/lock icon in your browser address bar, set Microphone to "Allow", then try again.\n\nTip: open this app from an https:// link (e.g. GitHub Pages) so the browser remembers the permission permanently instead of asking each time.');
+    } else {
+      alert('Could not access microphone: ' + e.message);
+    }
+    return false;
+  }
+}
+
+// ── Record / Stop ─────────────────────────────────────────────────────────
+function toggleRecording() {
+  if (state.isRecording) {
+    stopRecording(true);   // true = fire suggestions
+  } else {
+    startRecording();
+  }
+}
+
+async function startRecording() {
+  if (!state.keys.anthropic && !state.keys.openai) { openModal('api-modal'); return; }
+  const ok = await ensureMicAccess();
+  if (!ok) return;
+  initRecognition();
+  try { recognition.start(); } catch(e) { console.error(e); }
+}
+
+function stopRecording(fireSuggestions = true) {
+  state.isRecording = false;
+  try { recognition.abort(); } catch(e) {}
+  sealBlock();
+
+  recordBtn.classList.remove('recording');
+  recordIcon.textContent = '●';
+  recordLabel.textContent = 'Record';
+  footerHint.innerHTML = 'Press <strong>Record</strong> when the other person starts talking';
+
+  const total = state.blocks.map(b => b.text).join(' ').split(/\s+/).filter(Boolean).length;
+  if (fireSuggestions && total >= 3) {
+    setStatus('thinking', 'Generating responses...');
+    requestBoth();
+  } else {
+    setStatus('ready', 'Ready');
+  }
+}
+
+// ── Suggestions ───────────────────────────────────────────────────────────
+function requestBoth() {
+  ['a','b'].forEach(id => {
+    if (!state.feedbackInProgress[id]) requestSuggestion(id);
+  });
+}
+
+async function requestSuggestion(coachId) {
+  const coach = coaches[coachId];
+  if (!state.keys[coach.provider]) { openModal('api-modal'); return; }
+
+  const theySaid = state.blocks.map(b => b.text).filter(Boolean).join('\n').trim();
+  if (!theySaid) return;
+
+  state.feedbackInProgress[coachId] = true;
+
+  const context = contextInput.value.trim();
+  const fbBody  = document.getElementById('feedback-' + coachId);
+  document.getElementById('empty-' + coachId).style.display = 'none';
+
+  const card = document.createElement('div');
+  card.className = 'response-card streaming';
+  card.style.borderLeftColor = coach.color;
+  card.innerHTML = `
+    <div class="card-meta">
+      <span class="card-tag thinking">Thinking...</span>
+      <span class="card-time">${fmtTime(new Date())}</span>
+    </div>
+    <div class="card-body"></div>`;
+  fbBody.appendChild(card);
+  scrollTo(fbBody);
+
+  const out = card.querySelector('.card-body');
+  let buffer = '';
+
+  const system = [
+    context ? `Context: ${context}` : 'This is a real conversation.',
+    '',
+    'The following is what someone just said to the user. Your job is to suggest what the USER should say back.',
+    '',
+    coach.instructions || 'Give a clear, helpful response.',
+    '',
+    'Rules:',
+    '- Write the actual words they should say, not coaching advice',
+    '- Do NOT say "you could say..." — just give the response directly',
+    '- Keep it natural and conversational',
+    '- Be concise',
+  ].join('\n');
+
+  const userMsg = `They said:\n"${theySaid}"\n\nWhat should I say back?`;
+
+  try {
+    if (coach.provider === 'anthropic') {
+      await streamAnthropic(coach, system, userMsg, d => {
+        buffer += d;
+        out.innerHTML = renderText(buffer) + '<span class="cursor"></span>';
+        scrollTo(fbBody);
+      });
+    } else {
+      await streamOpenAI(coach, system, userMsg, d => {
+        buffer += d;
+        out.innerHTML = renderText(buffer) + '<span class="cursor"></span>';
+        scrollTo(fbBody);
+      });
+    }
+
+    out.innerHTML = renderText(buffer);
+    card.classList.remove('streaming');
+    card.querySelector('.card-tag').className = 'card-tag done';
+    card.querySelector('.card-tag').textContent = coach.name;
+
+  } catch (err) {
+    const isKeyErr = /401|invalid|api[-_]?key|incorrect|authentication/i.test(err.message);
+    if (isKeyErr) {
+      out.innerHTML = `<span style="color:var(--danger)">Invalid ${coach.provider === 'anthropic' ? 'Anthropic' : 'OpenAI'} key — click 🔑 API Keys to fix it.</span>`;
+      openModal('api-modal');
+    } else {
+      out.innerHTML = `<span style="color:var(--danger)">${err.message}</span>`;
+    }
+    card.classList.remove('streaming');
+  }
+
+  state.feedbackInProgress[coachId] = false;
+  if (!state.feedbackInProgress.a && !state.feedbackInProgress.b) {
+    setStatus('ready', 'Ready');
+  }
+}
+
+// ── Anthropic ─────────────────────────────────────────────────────────────
+async function streamAnthropic(coach, system, user, onDelta) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': state.keys.anthropic,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({ model: coach.model, max_tokens: 400, stream: true,
+      system, messages: [{ role: 'user', content: user }] })
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+  await readSSE(res, data => { const p = JSON.parse(data); if (p.delta?.text) onDelta(p.delta.text); });
+}
+
+// ── OpenAI ────────────────────────────────────────────────────────────────
+async function streamOpenAI(coach, system, user, onDelta) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.keys.openai },
+    body: JSON.stringify({ model: coach.model, max_tokens: 400, stream: true,
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }] })
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+  await readSSE(res, data => {
+    const p = JSON.parse(data);
+    const t = p.choices?.[0]?.delta?.content;
+    if (t) onDelta(t);
+  });
+}
+
+// ── SSE reader ────────────────────────────────────────────────────────────
+async function readSSE(res, handle) {
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    for (const line of dec.decode(value, { stream: true }).split('\n')) {
+      if (!line.startsWith('data: ')) continue;
+      const raw = line.slice(6).trim();
+      if (!raw || raw === '[DONE]') continue;
+      try { handle(raw); } catch {}
+    }
+  }
+}
+
+// ── Key tester ────────────────────────────────────────────────────────────
+async function testKey(provider) {
+  const key = document.getElementById(provider + '-key-input').value.trim();
+  const resultEl = document.getElementById(provider + '-test-result');
+
+  if (!key) { resultEl.innerHTML = '<span style="color:var(--warn)">Paste a key first.</span>'; return; }
+
+  const prefix = provider === 'anthropic' ? 'sk-ant-' : 'sk-';
+  if (!key.startsWith(prefix)) {
+    resultEl.innerHTML = `<span style="color:var(--warn)">Should start with "${prefix}" — double-check the copy.</span>`;
+    return;
+  }
+  if (/\s/.test(key)) {
+    resultEl.innerHTML = '<span style="color:var(--warn)">Contains a space — re-copy it.</span>';
+    return;
+  }
+
+  resultEl.innerHTML = '<span style="color:var(--muted)">Testing…</span>';
+
+  try {
+    let res, data;
+    if (provider === 'anthropic') {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key,
+          'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5,
+          messages: [{ role: 'user', content: 'hi' }] })
+      });
+      data = await res.json().catch(()=>({}));
+    } else {
+      res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 5,
+          messages: [{ role: 'user', content: 'hi' }] })
+      });
+      data = await res.json().catch(()=>({}));
+    }
+
+    if (res.ok) {
+      resultEl.innerHTML = '<span style="color:var(--accent2)">✅ Key works — click Save.</span>';
+    } else {
+      const msg = data.error?.message || `HTTP ${res.status}`;
+      const hint = /billing|credit|quota/i.test(msg) ? ' — add credits in the console' :
+                   /auth|invalid|key/i.test(msg) ? ' — key is wrong or revoked' : '';
+      resultEl.innerHTML = `<span style="color:var(--danger)">❌ ${msg}${hint}</span>`;
+    }
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--danger)">❌ ${e.message}</span>`;
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function setStatus(type, text) {
+  statusDot.className = 'dot' + (type ? ' ' + type : '');
+  statusText.textContent = text;
+}
+function fmtTime(d) { return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
+function scrollTo(el) { requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; }); }
+function renderText(t) {
+  return t.split('\n').map(l => l.trim()).filter(Boolean).map(l => `<div>${l}</div>`).join('');
+}
+function clearTranscript() {
+  state.blocks = []; state.activeBlockId = null;
+  transcriptBody.innerHTML = ''; transcriptBody.appendChild(emptyTranscript);
+  emptyTranscript.style.display = '';
+}
+function clearFeedback(id) {
+  const b = document.getElementById('feedback-' + id);
+  const e = document.getElementById('empty-' + id);
+  b.innerHTML = ''; b.appendChild(e); e.style.display = '';
+}
+function clearAll() { clearTranscript(); clearFeedback('a'); clearFeedback('b'); }
+function markKeySet() { apiKeyBtn.classList.add('set'); apiKeyBtn.textContent = '🔑 Keys Set'; }
+
+// ── Modals ────────────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'api-modal') {
+    document.getElementById('anthropic-key-input').value = state.keys.anthropic;
+    document.getElementById('openai-key-input').value = state.keys.openai;
+    document.getElementById('anthropic-test-result').innerHTML = '';
+    document.getElementById('openai-test-result').innerHTML = '';
+    setTimeout(() => document.getElementById('anthropic-key-input').focus(), 80);
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function saveApiKeys() {
+  state.keys.anthropic = document.getElementById('anthropic-key-input').value.trim();
+  state.keys.openai    = document.getElementById('openai-key-input').value.trim();
+  localStorage.setItem('wr_key_anthropic', state.keys.anthropic);
+  localStorage.setItem('wr_key_openai',    state.keys.openai);
+  if (state.keys.anthropic || state.keys.openai) markKeySet();
+  closeModal('api-modal');
+}
+
+function openCoachModal(id) {
+  const c = coaches[id];
+  document.getElementById('coach-modal-id').value = id;
+  document.getElementById('coach-modal-title').textContent = `Configure ${c.name}`;
+  document.getElementById('coach-name-input').value = c.name;
+  document.getElementById('coach-provider-input').value = c.provider;
+  populateModelOptions(c.model);
+  document.getElementById('coach-instructions-input').value = c.instructions || '';
+  openModal('coach-modal');
+}
+
+function populateModelOptions(selected) {
+  const provider = document.getElementById('coach-provider-input').value;
+  const sel = document.getElementById('coach-model-input');
+  sel.innerHTML = MODELS[provider].map(m => `<option value="${m.id}">${m.label}</option>`).join('');
+  if (selected && MODELS[provider].some(m => m.id === selected)) sel.value = selected;
+}
+
+function saveCoach() {
+  const id = document.getElementById('coach-modal-id').value;
+  const c = coaches[id];
+  c.name         = document.getElementById('coach-name-input').value.trim() || c.name;
+  c.provider     = document.getElementById('coach-provider-input').value;
+  c.model        = document.getElementById('coach-model-input').value;
+  c.instructions = document.getElementById('coach-instructions-input').value.trim();
+  localStorage.setItem('wr_coach_' + id, JSON.stringify(c));
+  document.getElementById('title-' + id).textContent = c.name;
+  closeModal('coach-modal');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+</script>
+</body>
+</html>
