@@ -455,6 +455,8 @@ const state = {
   activeBlockId: null,
   blockCounter: 0,
   feedbackInProgress: { a: false, b: false },
+  preFired: false,       // true once pre-fire has been sent for this recording session
+  silenceTimer: null,    // timer for pre-fire trigger
 };
 
 // ── DOM ───────────────────────────────────────────────────────────────────
@@ -544,6 +546,16 @@ function appendFinal(text) {
     document.getElementById('blk-text-' + state.activeBlockId).textContent = blk.text;
   }
   scrollTo(transcriptBody);
+
+  // Pre-fire: after 2s of no new speech, start AI request in the background
+  // so responses are already streaming when the user hits Stop.
+  clearTimeout(state.silenceTimer);
+  if (!state.preFired) {
+    state.silenceTimer = setTimeout(() => {
+      const words = state.blocks.map(b => b.text).join(' ').split(/\s+/).filter(Boolean).length;
+      if (words >= 3) { state.preFired = true; requestBoth(); }
+    }, 2000);
+  }
 }
 
 function setInterim(text) {
@@ -597,12 +609,15 @@ async function startRecording() {
   if (!state.keys.anthropic && !state.keys.openai) { openModal('api-modal'); return; }
   const ok = await ensureMicAccess();
   if (!ok) return;
+  state.preFired = false;
+  clearTimeout(state.silenceTimer);
   initRecognition();
   try { recognition.start(); } catch(e) { console.error(e); }
 }
 
 function stopRecording(fireSuggestions = true) {
   state.isRecording = false;
+  clearTimeout(state.silenceTimer);
   try { recognition.abort(); } catch(e) {}
   sealBlock();
 
@@ -613,8 +628,14 @@ function stopRecording(fireSuggestions = true) {
 
   const total = state.blocks.map(b => b.text).join(' ').split(/\s+/).filter(Boolean).length;
   if (fireSuggestions && total >= 3) {
-    setStatus('thinking', 'Generating responses...');
-    requestBoth();
+    if (!state.preFired) {
+      // Pre-fire didn't trigger yet — fire now on Stop
+      setStatus('thinking', 'Generating responses...');
+      requestBoth();
+    } else {
+      // Already fired in background — responses are already streaming
+      setStatus('thinking', 'Generating responses...');
+    }
   } else {
     setStatus('ready', 'Ready');
   }
@@ -718,7 +739,7 @@ async function streamAnthropic(coach, system, user, onDelta) {
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true',
     },
-    body: JSON.stringify({ model: coach.model, max_tokens: 400, stream: true,
+    body: JSON.stringify({ model: coach.model, max_tokens: 200, stream: true,
       system, messages: [{ role: 'user', content: user }] })
   });
   if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
@@ -730,7 +751,7 @@ async function streamOpenAI(coach, system, user, onDelta) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.keys.openai },
-    body: JSON.stringify({ model: coach.model, max_tokens: 400, stream: true,
+    body: JSON.stringify({ model: coach.model, max_tokens: 200, stream: true,
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }] })
   });
   if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
