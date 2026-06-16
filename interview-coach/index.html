@@ -281,13 +281,15 @@
 <!-- API Key Modal -->
 <div class="modal-overlay" id="api-modal">
   <div class="modal">
-    <h2>🔑 Anthropic API Key</h2>
-    <p>Stored only in your browser's local storage — sent only to Anthropic's API.</p>
-    <label>API Key</label>
-    <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off" />
+    <h2>🔑 API Keys</h2>
+    <p>Keys are stored only in your browser's local storage and sent only to each provider's API. Add a key for whichever provider(s) your coaches use.</p>
+    <label>Anthropic API Key <span style="color:var(--muted);font-weight:400">(for Claude coaches)</span></label>
+    <input type="password" id="anthropic-key-input" placeholder="sk-ant-..." autocomplete="off" />
+    <label>OpenAI API Key <span style="color:var(--muted);font-weight:400">(for ChatGPT coaches)</span></label>
+    <input type="password" id="openai-key-input" placeholder="sk-..." autocomplete="off" />
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('api-modal')">Cancel</button>
-      <button class="btn-primary" onclick="saveApiKey()">Save</button>
+      <button class="btn-primary" onclick="saveApiKeys()">Save</button>
     </div>
   </div>
 </div>
@@ -300,12 +302,13 @@
     <input type="hidden" id="coach-modal-id" />
     <label>Name</label>
     <input type="text" id="coach-name-input" placeholder="e.g. Strict Coach" />
-    <label>Model</label>
-    <select id="coach-model-input">
-      <option value="claude-opus-4-8">Claude Opus 4 (most thorough)</option>
-      <option value="claude-sonnet-4-6">Claude Sonnet 4 (faster)</option>
-      <option value="claude-haiku-4-5-20251001">Claude Haiku 4 (quickest)</option>
+    <label>Provider</label>
+    <select id="coach-provider-input" onchange="populateModelOptions()">
+      <option value="anthropic">Anthropic (Claude)</option>
+      <option value="openai">OpenAI (ChatGPT)</option>
     </select>
+    <label>Model</label>
+    <select id="coach-model-input"></select>
     <label>Custom Instructions <span style="color:var(--muted);font-weight:400">(optional)</span></label>
     <textarea id="coach-instructions-input" placeholder="e.g. Be very direct and critical. Focus on what's missing."></textarea>
     <div class="modal-actions">
@@ -410,16 +413,32 @@
 const coaches = {
   a: {
     name: 'Coach A',
+    provider: 'anthropic',
     model: 'claude-opus-4-8',
     instructions: 'Be thorough and analytical. Focus on structure (STAR method), completeness, and depth. Rate the answer and explain why.',
     color: '#6c63ff',
   },
   b: {
     name: 'Coach B',
-    model: 'claude-sonnet-4-6',
+    provider: 'openai',
+    model: 'gpt-4o',
     instructions: 'Be quick and punchy. Give 3 bullet points max. Focus on the single most important improvement and highlight the best thing they said.',
     color: '#ec4899',
   },
+};
+
+// Available models per provider
+const MODELS = {
+  anthropic: [
+    { id: 'claude-opus-4-8', label: 'Claude Opus 4 (most thorough)' },
+    { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4 (faster)' },
+    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4 (quickest)' },
+  ],
+  openai: [
+    { id: 'gpt-4o', label: 'GPT-4o (recommended)' },
+    { id: 'gpt-4o-mini', label: 'GPT-4o mini (faster/cheaper)' },
+    { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+  ],
 };
 
 // Load saved configs
@@ -436,7 +455,10 @@ function applyCoachLabel(id) {
 // ── App state ─────────────────────────────────────────────────────────────
 const state = {
   isRecording: false,
-  apiKey: localStorage.getItem('wr_api_key') || '',
+  keys: {
+    anthropic: localStorage.getItem('wr_key_anthropic') || '',
+    openai: localStorage.getItem('wr_key_openai') || '',
+  },
   transcript: [],
   activeSegmentId: null,
   segmentIdCounter: 0,
@@ -464,7 +486,7 @@ if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) 
   document.getElementById('no-speech').classList.add('show');
 }
 
-if (state.apiKey) markApiKeySet();
+if (state.keys.anthropic || state.keys.openai) markApiKeySet();
 
 // ── Speech Recognition ────────────────────────────────────────────────────
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -574,7 +596,10 @@ function requestBothFeedbacks() {
 }
 
 async function requestFeedback(coachId) {
-  if (!state.apiKey) { openModal('api-modal'); return; }
+  const coach = coaches[coachId];
+
+  // Each coach needs the key for its own provider
+  if (!state.keys[coach.provider]) { openModal('api-modal'); return; }
 
   const transcript = state.transcript.map(s => s.text).filter(Boolean).join('\n\n');
   if (!transcript.trim()) return;
@@ -582,7 +607,6 @@ async function requestFeedback(coachId) {
   state.feedbackInProgress[coachId] = true;
   updateThinkingStatus();
 
-  const coach = coaches[coachId];
   const context = contextInput.value.trim() || 'a job interview';
   const feedbackBody = document.getElementById('feedback-' + coachId);
   const emptyEl = document.getElementById('empty-' + coachId);
@@ -601,8 +625,7 @@ async function requestFeedback(coachId) {
   feedbackBody.appendChild(card);
   scrollTo(feedbackBody);
 
-  const outId = card.querySelector('.feedback-text').id;
-  const out = document.getElementById(outId);
+  const out = card.querySelector('.feedback-text');
   let buffer = '';
 
   const systemPrompt = `You are a live interview coach giving real-time feedback during ${context}.
@@ -614,67 +637,110 @@ Rules:
 - Use ✅ strengths, ⚠️ improvements, 💡 tips
 - Do NOT repeat what the candidate said back to them`;
 
+  const userPrompt = `Here's what I said:\n\n${transcript}\n\nGive me feedback on my answer.`;
+  const onDelta = (text) => {
+    buffer += text;
+    out.innerHTML = renderText(buffer) + '<span class="cursor"></span>';
+    scrollTo(feedbackBody);
+  };
+
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': state.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: coach.model,
-        max_tokens: 400,
-        stream: true,
-        system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: `Here's what I said:\n\n${transcript}\n\nGive me feedback on my answer.`
-        }]
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      for (const line of decoder.decode(value, { stream: true }).split('\n')) {
-        if (!line.startsWith('data: ')) continue;
-        const raw = line.slice(6).trim();
-        if (raw === '[DONE]') continue;
-        try {
-          const p = JSON.parse(raw);
-          if (p.delta?.text) {
-            buffer += p.delta.text;
-            out.innerHTML = renderText(buffer) + '<span class="cursor"></span>';
-            scrollTo(feedbackBody);
-          }
-        } catch {}
-      }
+    if (coach.provider === 'anthropic') {
+      await streamAnthropic(coach, systemPrompt, userPrompt, onDelta);
+    } else {
+      await streamOpenAI(coach, systemPrompt, userPrompt, onDelta);
     }
 
     out.innerHTML = renderText(buffer);
     card.classList.remove('streaming');
-    card.style.borderLeftColor = coach.color;
     card.querySelector('.feedback-tag').className = 'feedback-tag good';
     card.querySelector('.feedback-tag').textContent = coach.name;
 
   } catch (err) {
     out.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}</span>`;
     card.classList.remove('streaming');
-    if (err.message.includes('401') || err.message.includes('invalid_api_key')) openModal('api-modal');
+    if (/401|invalid|api[-_]?key|incorrect/i.test(err.message)) openModal('api-modal');
   }
 
   state.feedbackInProgress[coachId] = false;
   updateThinkingStatus();
+}
+
+// ── Anthropic streaming ───────────────────────────────────────────────────
+async function streamAnthropic(coach, system, user, onDelta) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': state.keys.anthropic,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: coach.model,
+      max_tokens: 400,
+      stream: true,
+      system,
+      messages: [{ role: 'user', content: user }],
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+
+  await readSSE(res, (data) => {
+    const p = JSON.parse(data);
+    if (p.delta?.text) onDelta(p.delta.text);
+  });
+}
+
+// ── OpenAI streaming ──────────────────────────────────────────────────────
+async function streamOpenAI(coach, system, user, onDelta) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + state.keys.openai,
+    },
+    body: JSON.stringify({
+      model: coach.model,
+      max_tokens: 400,
+      stream: true,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+
+  await readSSE(res, (data) => {
+    const p = JSON.parse(data);
+    const text = p.choices?.[0]?.delta?.content;
+    if (text) onDelta(text);
+  });
+}
+
+// ── Shared SSE reader ─────────────────────────────────────────────────────
+async function readSSE(res, handleData) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    for (const line of decoder.decode(value, { stream: true }).split('\n')) {
+      if (!line.startsWith('data: ')) continue;
+      const raw = line.slice(6).trim();
+      if (raw === '[DONE]' || !raw) continue;
+      try { handleData(raw); } catch {}
+    }
+  }
 }
 
 function renderText(text) {
@@ -700,7 +766,7 @@ function toggleRecording() {
 }
 
 function startRecording() {
-  if (!state.apiKey) { openModal('api-modal'); return; }
+  if (!state.keys.anthropic && !state.keys.openai) { openModal('api-modal'); return; }
   initRecognition();
   try { recognition.start(); } catch(e) { console.error(e); }
 }
@@ -723,14 +789,24 @@ function openCoachModal(id) {
   document.getElementById('coach-modal-id').value = id;
   document.getElementById('coach-modal-title').textContent = `Configure ${coach.name}`;
   document.getElementById('coach-name-input').value = coach.name;
-  document.getElementById('coach-model-input').value = coach.model;
+  document.getElementById('coach-provider-input').value = coach.provider;
+  populateModelOptions(coach.model);
   document.getElementById('coach-instructions-input').value = coach.instructions || '';
   openModal('coach-modal');
+}
+
+function populateModelOptions(selected) {
+  const provider = document.getElementById('coach-provider-input').value;
+  const sel = document.getElementById('coach-model-input');
+  sel.innerHTML = MODELS[provider].map(m =>
+    `<option value="${m.id}">${m.label}</option>`).join('');
+  if (selected && MODELS[provider].some(m => m.id === selected)) sel.value = selected;
 }
 
 function saveCoach() {
   const id = document.getElementById('coach-modal-id').value;
   coaches[id].name = document.getElementById('coach-name-input').value.trim() || coaches[id].name;
+  coaches[id].provider = document.getElementById('coach-provider-input').value;
   coaches[id].model = document.getElementById('coach-model-input').value;
   coaches[id].instructions = document.getElementById('coach-instructions-input').value.trim();
   localStorage.setItem('wr_coach_' + id, JSON.stringify(coaches[id]));
@@ -776,16 +852,16 @@ function clearAll() {
 
 function markApiKeySet() {
   apiKeyBtn.classList.add('set');
-  apiKeyBtn.textContent = '🔑 Key Set';
+  apiKeyBtn.textContent = '🔑 Keys Set';
 }
 
 // ── Modals ────────────────────────────────────────────────────────────────
 function openModal(id) {
   document.getElementById(id).classList.add('open');
   if (id === 'api-modal') {
-    const input = document.getElementById('api-key-input');
-    input.value = state.apiKey;
-    setTimeout(() => input.focus(), 80);
+    document.getElementById('anthropic-key-input').value = state.keys.anthropic;
+    document.getElementById('openai-key-input').value = state.keys.openai;
+    setTimeout(() => document.getElementById('anthropic-key-input').focus(), 80);
   }
 }
 
@@ -793,20 +869,22 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-function saveApiKey() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key) return;
-  state.apiKey = key;
-  localStorage.setItem('wr_api_key', key);
-  markApiKeySet();
+function saveApiKeys() {
+  state.keys.anthropic = document.getElementById('anthropic-key-input').value.trim();
+  state.keys.openai = document.getElementById('openai-key-input').value.trim();
+  localStorage.setItem('wr_key_anthropic', state.keys.anthropic);
+  localStorage.setItem('wr_key_openai', state.keys.openai);
+  if (state.keys.anthropic || state.keys.openai) markApiKeySet();
   closeModal('api-modal');
 }
 
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
 });
-document.getElementById('api-key-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveApiKey();
+['anthropic-key-input', 'openai-key-input'].forEach(idn => {
+  document.getElementById(idn).addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveApiKeys();
+  });
 });
 </script>
 </body>
