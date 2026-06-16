@@ -284,9 +284,17 @@
     <h2>🔑 API Keys</h2>
     <p>Keys are stored only in your browser's local storage and sent only to each provider's API. Add a key for whichever provider(s) your coaches use.</p>
     <label>Anthropic API Key <span style="color:var(--muted);font-weight:400">(for Claude coaches)</span></label>
-    <input type="password" id="anthropic-key-input" placeholder="sk-ant-..." autocomplete="off" />
+    <div style="display:flex;gap:6px">
+      <input type="password" id="anthropic-key-input" placeholder="sk-ant-..." autocomplete="off" style="flex:1" />
+      <button class="btn-ghost" style="padding:8px 14px" onclick="testKey('anthropic')">Test</button>
+    </div>
+    <div id="anthropic-test-result" style="font-size:12px;margin-top:5px;min-height:16px"></div>
     <label>OpenAI API Key <span style="color:var(--muted);font-weight:400">(for ChatGPT coaches)</span></label>
-    <input type="password" id="openai-key-input" placeholder="sk-..." autocomplete="off" />
+    <div style="display:flex;gap:6px">
+      <input type="password" id="openai-key-input" placeholder="sk-..." autocomplete="off" style="flex:1" />
+      <button class="btn-ghost" style="padding:8px 14px" onclick="testKey('openai')">Test</button>
+    </div>
+    <div id="openai-test-result" style="font-size:12px;margin-top:5px;min-height:16px"></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeModal('api-modal')">Cancel</button>
       <button class="btn-primary" onclick="saveApiKeys()">Save</button>
@@ -887,6 +895,77 @@ function openModal(id) {
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+}
+
+// ── Key tester ────────────────────────────────────────────────────────────
+async function testKey(provider) {
+  const input = document.getElementById(provider + '-key-input');
+  const result = document.getElementById(provider + '-test-result');
+  const key = input.value.trim();
+
+  if (!key) {
+    result.innerHTML = '<span style="color:var(--warn)">Enter a key first.</span>';
+    return;
+  }
+  // Catch the most common copy/paste mistakes before even calling the API.
+  const expectedPrefix = provider === 'anthropic' ? 'sk-ant-' : 'sk-';
+  if (!key.startsWith(expectedPrefix)) {
+    result.innerHTML = `<span style="color:var(--warn)">⚠️ This doesn't look like a ${provider} key — it should start with "${expectedPrefix}".</span>`;
+    return;
+  }
+  if (/\s/.test(key)) {
+    result.innerHTML = '<span style="color:var(--warn)">⚠️ The key contains a space or line break — re-copy it cleanly.</span>';
+    return;
+  }
+
+  result.innerHTML = '<span style="color:var(--muted)">Testing…</span>';
+
+  try {
+    if (provider === 'anthropic') {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 5,
+          messages: [{ role: 'user', content: 'hi' }],
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) result.innerHTML = '<span style="color:var(--accent2)">✅ Key works! Click Save.</span>';
+      else result.innerHTML = `<span style="color:var(--danger)">❌ ${data.error?.message || res.status} — ${hintFor(data.error?.type)}</span>`;
+    } else {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + key,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          max_tokens: 5,
+          messages: [{ role: 'user', content: 'hi' }],
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) result.innerHTML = '<span style="color:var(--accent2)">✅ Key works! Click Save.</span>';
+      else result.innerHTML = `<span style="color:var(--danger)">❌ ${data.error?.message || res.status}</span>`;
+    }
+  } catch (err) {
+    result.innerHTML = `<span style="color:var(--danger)">❌ ${err.message}</span>`;
+  }
+}
+
+function hintFor(type) {
+  if (type === 'authentication_error') return 'the key is wrong or revoked';
+  if (type === 'permission_error') return 'add billing credits at console.anthropic.com';
+  if (type && type.includes('billing')) return 'add credits in the Anthropic console';
+  return 'check your key and billing in the Anthropic console';
 }
 
 function saveApiKeys() {
