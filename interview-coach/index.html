@@ -445,6 +445,16 @@ const MODELS = {
 ['a', 'b'].forEach(id => {
   const saved = localStorage.getItem('wr_coach_' + id);
   if (saved) try { Object.assign(coaches[id], JSON.parse(saved)); } catch {}
+  // Migration / consistency: ensure model belongs to the selected provider.
+  // Older saved configs had no `provider`, so infer it from the model id.
+  const c = coaches[id];
+  if (c.model && c.model.startsWith('gpt')) c.provider = 'openai';
+  else if (c.model && c.model.startsWith('claude')) c.provider = 'anthropic';
+  if (!c.provider) c.provider = 'anthropic';
+  // If model doesn't match provider, fall back to that provider's first model.
+  if (!MODELS[c.provider].some(m => m.id === c.model)) {
+    c.model = MODELS[c.provider][0].id;
+  }
   applyCoachLabel(id);
 });
 
@@ -657,9 +667,19 @@ Rules:
     card.querySelector('.feedback-tag').textContent = coach.name;
 
   } catch (err) {
-    out.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}</span>`;
+    const providerName = coach.provider === 'anthropic' ? 'Anthropic (Claude)' : 'OpenAI (ChatGPT)';
+    const isKeyError = /401|invalid|api[-_]?key|incorrect|authentication/i.test(err.message);
+    if (isKeyError) {
+      out.innerHTML = `<span style="color:var(--danger)">⚠️ Your <strong>${providerName}</strong> API key was rejected.</span>
+        <div style="color:var(--muted);font-size:12px;margin-top:6px">
+          Click <strong>🔑 API Keys</strong> and paste a valid key (no extra spaces).
+          ${coach.provider === 'anthropic' ? 'Get one at console.anthropic.com — it starts with sk-ant-' : 'Get one at platform.openai.com/api-keys — it starts with sk-'}
+        </div>`;
+      openModal('api-modal');
+    } else {
+      out.innerHTML = `<span style="color:var(--danger)">Error (${providerName}): ${err.message}</span>`;
+    }
     card.classList.remove('streaming');
-    if (/401|invalid|api[-_]?key|incorrect/i.test(err.message)) openModal('api-modal');
   }
 
   state.feedbackInProgress[coachId] = false;
