@@ -1,964 +1,957 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WalkRight — Trader</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WalkRight — Trader</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3349;
+  --accent:#6c63ff;--bull:#4ade80;--bear:#ef4444;--warn:#f59e0b;
+  --text:#e8eaf0;--muted:#7b8099;--mono:'SF Mono','Roboto Mono',monospace;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2e3349;
-      --accent: #6c63ff;
-      --bull: #4ade80;
-      --bear: #ef4444;
-      --warn: #f59e0b;
-      --text: #e8eaf0;
-      --muted: #7b8099;
-      --col-a: #4ade80;
-      --col-b: #ef4444;
-    }
+/* ── Header ── */
+header{display:flex;align-items:center;padding:0 16px;height:46px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;gap:0}
+.logo{font-size:16px;font-weight:700;letter-spacing:-0.5px}
+.logo span{color:var(--accent)}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-left:4px;margin-right:18px}
+.tab-nav{display:flex;flex:1;gap:1px}
+.tab-btn{padding:0 15px;height:46px;border:none;background:none;color:var(--muted);font-size:13px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:inherit;white-space:nowrap}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--accent)}
+.hdr-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.hdr-btn{padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.hdr-btn:hover{color:var(--text);border-color:var(--accent)}
+.hdr-btn.set{color:var(--bull);border-color:var(--bull)}
+#status-badge{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:4px 10px;background:var(--surface2);border-radius:20px;border:1px solid var(--border)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:background .3s}
+.dot.ready{background:var(--bull)}
+.dot.thinking{background:var(--warn);animation:dotpulse 1.2s infinite}
+@keyframes dotpulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+/* ── Tab panels ── */
+.tab-panel{display:none;flex:1;overflow:hidden}
+.tab-panel.active{display:flex;flex-direction:column}
+#analysis-tab.active{flex-direction:row}
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 18px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      flex-shrink: 0;
-    }
-    .logo { font-size: 17px; font-weight: 700; letter-spacing: -0.5px; }
-    .logo span { color: var(--accent); }
-    .logo-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; letter-spacing: 1px; text-transform: uppercase; }
-    .header-right { display: flex; align-items: center; gap: 8px; }
-    .hdr-btn {
-      padding: 5px 12px; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 7px;
-      color: var(--muted); font-size: 12px; cursor: pointer;
-      transition: all 0.15s; white-space: nowrap;
-    }
-    .hdr-btn:hover { color: var(--text); border-color: var(--accent); }
-    .hdr-btn.set { color: var(--bull); border-color: var(--bull); }
+/* ── PORTFOLIO TAB ── */
+.stats-bar{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--border);gap:1px}
+.stat-card{flex:1;padding:10px 18px;background:var(--surface);display:flex;flex-direction:column;gap:2px}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+.stat-value{font-size:20px;font-weight:700;font-family:var(--mono)}
+.stat-sub{font-size:11px}
+.up{color:var(--bull)}.down{color:var(--bear)}.neutral{color:var(--muted)}
 
-    #status-badge {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--muted);
-      padding: 4px 10px; background: var(--surface2);
-      border-radius: 20px; border: 1px solid var(--border);
-    }
-    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
-    .dot.thinking { background: var(--warn); animation: pulse 1.2s infinite; }
-    .dot.ready { background: var(--bull); }
-    .dot.error { background: var(--bear); }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.table-scroll{flex:1;overflow-y:auto}
+.table-scroll::-webkit-scrollbar{width:3px}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--surface);position:sticky;top:0;z-index:5}
+th{padding:7px 13px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+th.r,td.r{text-align:right}
+td{padding:9px 13px;border-bottom:1px solid rgba(46,51,73,.4);vertical-align:middle}
+tbody tr:hover{background:rgba(108,99,255,.04)}
+tbody tr:hover .row-acts{opacity:1}
 
-    /* ── Setup bar ── */
-    #setup-bar {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 18px;
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      flex-shrink: 0; flex-wrap: wrap;
-    }
-    .setup-field {
-      display: flex; align-items: center; gap: 6px;
-    }
-    .setup-field label { font-size: 11px; color: var(--muted); white-space: nowrap; }
-    .setup-input {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 7px; color: var(--text); padding: 5px 10px;
-      font-size: 13px; outline: none; transition: border-color 0.2s;
-    }
-    .setup-input:focus { border-color: var(--accent); }
-    .setup-input::placeholder { color: var(--muted); }
-    #ticker-input { width: 80px; text-transform: uppercase; font-weight: 700; font-family: monospace; font-size: 14px; }
-    #price-input { width: 90px; font-family: monospace; }
-    #timeframe-select {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 7px; color: var(--text); padding: 5px 10px;
-      font-size: 13px; outline: none; cursor: pointer;
-    }
-    #timeframe-select:focus { border-color: var(--accent); }
+.sym{font-family:var(--mono);font-weight:700;font-size:14px}
+.price-in{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:3px 7px;color:var(--text);font-family:var(--mono);font-size:12px;width:82px;outline:none;text-align:right;transition:border-color .2s}
+.price-in:focus{border-color:var(--accent)}
+.pnl-pos{color:var(--bull);font-weight:600}
+.pnl-neg{color:var(--bear);font-weight:600}
+.pnl-neu{color:var(--muted)}
+.row-acts{opacity:0;transition:opacity .15s;display:flex;gap:4px;justify-content:flex-end}
+.row-btn{padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.row-btn:hover{color:var(--text);border-color:var(--accent)}
+.row-btn.del:hover{color:var(--bear);border-color:var(--bear)}
+.empty-port{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.empty-port .ei{font-size:40px;margin-bottom:12px}
 
-    /* ── 3-col layout ── */
-    main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      overflow: hidden;
-    }
+/* sparkline */
+.spark{display:block}
 
-    .panel {
-      display: flex; flex-direction: column; overflow: hidden;
-      border-right: 1px solid var(--border);
-    }
-    .panel:last-child { border-right: none; }
+/* add bar */
+.add-bar{padding:9px 14px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.add-in{background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:6px 9px;font-size:13px;outline:none;transition:border-color .2s;font-family:inherit}
+.add-in:focus{border-color:var(--accent)}
+.add-in::placeholder{color:var(--muted)}
+#ai-sym{width:72px;font-family:var(--mono);font-weight:700;text-transform:uppercase}
+#ai-shares{width:65px}
+#ai-cost{width:78px}
+#ai-cprice{width:78px}
+.add-btn{padding:7px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:filter .15s}
+.add-btn:hover{filter:brightness(1.1)}
+.scan-btn{margin-left:auto;padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s}
+.scan-btn:hover{color:var(--text);border-color:var(--accent)}
 
-    .panel-header {
-      padding: 9px 14px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface); flex-shrink: 0;
-    }
-    .panel-title-group { display: flex; align-items: center; gap: 7px; }
-    .panel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .panel-title {
-      font-size: 11px; font-weight: 600; letter-spacing: 0.7px;
-      text-transform: uppercase; color: var(--muted);
-    }
-    .panel-action {
-      font-size: 11px; color: var(--muted); cursor: pointer;
-      padding: 2px 7px; border-radius: 4px; border: 1px solid transparent;
-      background: none; transition: all 0.15s;
-    }
-    .panel-action:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
-    .panel-edit {
-      font-size: 11px; color: var(--muted); cursor: pointer;
-      padding: 2px 6px; border-radius: 4px; border: 1px solid transparent;
-      background: none; transition: all 0.15s;
-    }
-    .panel-edit:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
+/* portfolio AI strip */
+#port-ai{max-height:0;overflow:hidden;border-top:none;transition:max-height .3s;background:var(--surface)}
+#port-ai.open{max-height:260px;border-top:1px solid var(--border)}
+.port-ai-body{padding:13px 16px;overflow-y:auto;max-height:260px;font-size:13px;line-height:1.7;color:var(--text)}
+.port-ai-body::-webkit-scrollbar{width:3px}
+.port-ai-body::-webkit-scrollbar-thumb{background:var(--border)}
+.port-ai-body div{margin-bottom:4px}
 
-    .panel-body {
-      flex: 1; overflow-y: auto; padding: 14px;
-    }
-    .panel-body::-webkit-scrollbar { width: 3px; }
-    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+/* ── ANALYSIS TAB (3-col) ── */
+#analysis-tab.active{display:grid;grid-template-columns:1fr 1fr 1fr;overflow:hidden}
+.panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.panel:last-child{border-right:none}
+.ph{padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.ph-left{display:flex;align-items:center;gap:7px}
+.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ptitle{font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+.pact{font-size:11px;color:var(--muted);cursor:pointer;padding:2px 7px;border-radius:4px;border:1px solid transparent;background:none;transition:all .15s}
+.pact:hover{color:var(--text);border-color:var(--border);background:var(--surface2)}
+.pedit{font-size:11px;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:4px;border:1px solid transparent;background:none;transition:all .15s}
+.pedit:hover{color:var(--text);border-color:var(--border);background:var(--surface2)}
+.pb{flex:1;overflow-y:auto;padding:14px}
+.pb::-webkit-scrollbar{width:3px}
+.pb::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-    /* ── Setup panel (left) ── */
-    .setup-form { display: flex; flex-direction: column; gap: 10px; }
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
-    .form-label { font-size: 11px; color: var(--muted); }
-    .form-input {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 7px; color: var(--text); padding: 8px 11px;
-      font-size: 13px; outline: none; transition: border-color 0.2s;
-      font-family: inherit;
-    }
-    .form-input:focus { border-color: var(--accent); }
-    .form-input::placeholder { color: var(--muted); }
-    textarea.form-input { resize: vertical; min-height: 80px; }
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.fl{font-size:11px;color:var(--muted)}
+.fi{background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:7px 10px;font-size:13px;outline:none;transition:border-color .2s;font-family:inherit;width:100%}
+.fi:focus{border-color:var(--accent)}
+.fi::placeholder{color:var(--muted)}
+textarea.fi{resize:vertical;min-height:72px}
+select.fi{cursor:pointer}
+.top-row{display:flex;gap:8px;align-items:flex-end}
+.top-row .fg{flex:1;margin-bottom:0}
 
-    .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-    .tag {
-      font-size: 10px; padding: 3px 8px; border-radius: 4px;
-      border: 1px solid var(--border); color: var(--muted);
-      cursor: pointer; background: var(--surface2); transition: all 0.15s;
-    }
-    .tag:hover { color: var(--text); border-color: var(--accent); }
-    .tag.active { color: var(--accent); border-color: var(--accent); background: rgba(108,99,255,0.1); }
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);color:var(--muted);cursor:pointer;background:var(--surface2);transition:all .15s;user-select:none}
+.tag:hover{color:var(--text);border-color:var(--accent)}
+.tag.on{color:var(--accent);border-color:var(--accent);background:rgba(108,99,255,.1)}
 
-    /* ── Setup history ── */
-    .history-divider {
-      font-size: 10px; color: var(--muted); letter-spacing: 0.7px;
-      text-transform: uppercase; margin: 14px 0 8px;
-      padding-bottom: 6px; border-bottom: 1px solid var(--border);
-    }
-    .history-item {
-      padding: 8px 10px; margin-bottom: 6px;
-      background: var(--surface2); border-radius: 8px;
-      border-left: 3px solid var(--border);
-      cursor: pointer; transition: all 0.15s;
-      font-size: 12px;
-    }
-    .history-item:hover { border-left-color: var(--accent); background: #2a2e45; }
-    .history-ticker { font-weight: 700; font-family: monospace; font-size: 13px; color: var(--text); }
-    .history-meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
-    .history-snip { color: var(--muted); font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdiv{font-size:10px;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.hitem{padding:8px 10px;margin-bottom:6px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--border);cursor:pointer;transition:all .15s;font-size:12px}
+.hitem:hover{border-left-color:var(--accent);background:#2a2e45}
+.hticker{font-weight:700;font-family:var(--mono);font-size:13px}
+.hsnip{color:var(--muted);font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    .badge-bull { background: rgba(74,222,128,0.15); color: var(--bull); font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
-    .badge-bear { background: rgba(239,68,68,0.15); color: var(--bear); font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
-    .badge-neutral { background: rgba(245,158,11,0.15); color: var(--warn); font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+.rcard{margin-bottom:12px;padding:13px 15px;background:var(--surface2);border-radius:10px;border-left:3px solid var(--accent);animation:slidein .2s ease;font-size:13px;line-height:1.7}
+@keyframes slidein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.rcard.stream{border-left-color:var(--warn)}
+.cmeta{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.ctag{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.ctag.thinking{background:rgba(245,158,11,.15);color:var(--warn)}
+.ctag.bull{background:rgba(74,222,128,.15);color:var(--bull)}
+.ctag.bear{background:rgba(239,68,68,.15);color:var(--bear)}
+.ctag.ai{background:rgba(108,99,255,.15);color:var(--accent)}
+.cticker{font-family:var(--mono);font-size:12px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--surface)}
+.ctime{font-size:10px;color:var(--muted);margin-left:auto}
+.cbody{color:var(--text)}
+.cbody div{margin-bottom:4px}
+.cursor{display:inline-block;width:2px;height:13px;background:var(--warn);animation:blink .7s step-end infinite;vertical-align:text-bottom;margin-left:2px}
+@keyframes blink{50%{opacity:0}}
+.empty{text-align:center;color:var(--muted);font-size:13px;margin-top:50px;line-height:2}
+.empty .ei{font-size:32px;margin-bottom:10px}
 
-    /* ── Analysis cards ── */
-    .response-card {
-      margin-bottom: 12px; padding: 13px 15px;
-      background: var(--surface2); border-radius: 10px;
-      border-left: 3px solid var(--accent);
-      animation: slideIn 0.2s ease;
-      font-size: 13px; line-height: 1.7;
-    }
-    @keyframes slideIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
-    .response-card.streaming { border-left-color: var(--warn); }
-    .card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-    .card-tag {
-      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
-      text-transform: uppercase; padding: 2px 7px; border-radius: 4px;
-    }
-    .card-tag.thinking { background: rgba(245,158,11,0.15); color: var(--warn); }
-    .card-tag.done-bull { background: rgba(74,222,128,0.15); color: var(--bull); }
-    .card-tag.done-bear { background: rgba(239,68,68,0.15); color: var(--bear); }
-    .card-ticker {
-      font-family: monospace; font-size: 12px; font-weight: 700;
-      padding: 1px 6px; border-radius: 4px;
-      background: var(--surface); color: var(--text);
-    }
-    .card-time { font-size: 10px; color: var(--muted); margin-left: auto; }
-    .card-body { color: var(--text); }
-    .card-body div { margin-bottom: 5px; }
-    .cursor {
-      display: inline-block; width: 2px; height: 13px;
-      background: var(--warn); animation: blink 0.7s step-end infinite;
-      vertical-align: text-bottom; margin-left: 2px;
-    }
-    @keyframes blink { 50%{opacity:0} }
+/* analysis footer */
+#afooter{display:flex;flex-direction:column;align-items:center;gap:8px;padding:11px 20px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+#abtn{padding:11px 44px;border-radius:50px;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;background:var(--accent);color:#fff;font-family:inherit}
+#abtn:hover:not(:disabled){filter:brightness(1.12);transform:scale(1.02)}
+#abtn:disabled{opacity:.5;cursor:not-allowed}
+#abtn.analyzing{background:var(--warn);animation:apulse 1.8s infinite}
+@keyframes apulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 10px rgba(245,158,11,0)}}
+.ahint{font-size:11px;color:var(--muted)}
+.ahint strong{color:var(--text)}
 
-    .empty-state {
-      text-align: center; color: var(--muted);
-      font-size: 13px; margin-top: 50px; line-height: 2;
-    }
-    .empty-state .icon { font-size: 32px; margin-bottom: 10px; }
+/* ── JOURNAL TAB ── */
+#journal-tab.active{display:grid;grid-template-columns:300px 1fr;overflow:hidden;flex-direction:unset}
+.jform-panel{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.jfbody{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.jfbody::-webkit-scrollbar{width:3px}
+.jfbody::-webkit-scrollbar-thumb{background:var(--border)}
+.dir-row{display:flex;gap:6px}
+.dbtn{flex:1;padding:7px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;user-select:none}
+.dbtn:hover{color:var(--text)}
+.dbtn.buy.on{color:var(--bull);border-color:var(--bull);background:rgba(74,222,128,.1)}
+.dbtn.sell.on{color:var(--bear);border-color:var(--bear);background:rgba(239,68,68,.1)}
+.log-btn{width:100%;padding:9px;border-radius:7px;background:var(--accent);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:filter .15s;font-family:inherit}
+.log-btn:hover{filter:brightness(1.1)}
+.jentries{display:flex;flex-direction:column;overflow:hidden}
+.jeh{padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.jebody{flex:1;overflow-y:auto;padding:14px}
+.jebody::-webkit-scrollbar{width:3px}
+.jebody::-webkit-scrollbar-thumb{background:var(--border)}
+.jentry{padding:10px 13px;margin-bottom:8px;background:var(--surface2);border-radius:10px;border-left:3px solid var(--border);font-size:13px;animation:slidein .2s ease}
+.jentry.buy{border-left-color:var(--bull)}
+.jentry.sell{border-left-color:var(--bear)}
+.jeh-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+.jsym{font-family:var(--mono);font-weight:700;font-size:14px}
+.badge{font-size:10px;font-weight:700;padding:1px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+.badge.buy{background:rgba(74,222,128,.15);color:var(--bull)}
+.badge.sell{background:rgba(239,68,68,.15);color:var(--bear)}
+.jmeta{font-size:11px;color:var(--muted)}
+.jdate{font-size:10px;color:var(--muted);margin-left:auto}
+.jnotes{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
+.jai-btn{font-size:11px;color:var(--accent);cursor:pointer;padding:2px 7px;border-radius:4px;border:1px solid rgba(108,99,255,.3);background:rgba(108,99,255,.08);transition:all .15s;margin-top:6px;display:inline-block}
+.jai-btn:hover{background:rgba(108,99,255,.2)}
+.jai-resp{margin-top:8px;padding:8px 10px;background:var(--surface);border-radius:7px;font-size:12px;line-height:1.6;border-left:2px solid var(--accent)}
+.jai-resp div{margin-bottom:3px}
+.empty-j{text-align:center;color:var(--muted);font-size:13px;margin-top:60px;line-height:2}
+.empty-j .ei{font-size:36px;margin-bottom:10px}
 
-    /* ── Footer ── */
-    footer {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 10px; padding: 14px 20px 12px;
-      border-top: 1px solid var(--border);
-      background: var(--surface); flex-shrink: 0;
-    }
+/* ── Modals ── */
+.mover{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center}
+.mover.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(440px,92vw);animation:min .18s ease}
+@keyframes min{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal h2{font-size:16px;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.modal label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px;margin-top:12px}
+.modal label:first-of-type{margin-top:0}
+.modal input,.modal textarea,.modal select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:8px 11px;font-size:13px;outline:none;transition:border-color .2s;font-family:inherit}
+.modal input:focus,.modal textarea:focus,.modal select:focus{border-color:var(--accent)}
+.modal input[type=password]{font-family:monospace}
+.modal textarea{resize:vertical;min-height:60px}
+.trow{display:flex;gap:6px}
+.trow input{flex:1}
+.tres{font-size:11px;margin-top:4px;min-height:15px}
+.macts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.btn-p{padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:filter .15s}
+.btn-p:hover{filter:brightness(1.1)}
+.btn-g{padding:8px 14px;background:none;color:var(--muted);border:1px solid var(--border);border-radius:7px;font-size:13px;cursor:pointer;transition:all .15s}
+.btn-g:hover{color:var(--text);border-color:var(--accent)}
 
-    #analyze-btn {
-      display: flex; align-items: center; gap: 10px;
-      padding: 13px 48px; border-radius: 50px; border: none;
-      font-size: 15px; font-weight: 700; cursor: pointer;
-      transition: all 0.2s; background: var(--accent); color: white;
-      letter-spacing: 0.2px;
-    }
-    #analyze-btn:hover { filter: brightness(1.12); transform: scale(1.02); }
-    #analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; filter: none; }
-    #analyze-btn.analyzing {
-      background: var(--warn);
-      animation: analyzePulse 1.8s infinite;
-    }
-    @keyframes analyzePulse {
-      0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.5)}
-      50%{box-shadow:0 0 0 12px rgba(245,158,11,0)}
-    }
-
-    .footer-hint { font-size: 12px; color: var(--muted); text-align: center; }
-    .footer-hint strong { color: var(--text); }
-    .footer-btns { display: flex; gap: 8px; }
-    .sm-btn {
-      padding: 7px 14px; border-radius: 20px;
-      border: 1px solid var(--border); font-size: 12px;
-      cursor: pointer; background: var(--surface2); color: var(--muted);
-      transition: all 0.15s;
-    }
-    .sm-btn:hover { color: var(--text); border-color: var(--accent); }
-
-    /* ── Modals ── */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-      z-index: 100; align-items: center; justify-content: center;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 24px; width: min(440px, 92vw);
-      animation: modalIn 0.18s ease;
-    }
-    @keyframes modalIn { from{opacity:0;transform:scale(0.96) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
-    .modal h2 { font-size: 16px; margin-bottom: 6px; }
-    .modal p { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
-    .modal label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; margin-top: 12px; }
-    .modal label:first-of-type { margin-top: 0; }
-    .modal input, .modal textarea, .modal select {
-      width: 100%; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 7px; color: var(--text); padding: 8px 11px;
-      font-size: 13px; outline: none; transition: border-color 0.2s; font-family: inherit;
-    }
-    .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--accent); }
-    .modal input[type=password] { font-family: monospace; }
-    .modal textarea { resize: vertical; min-height: 60px; }
-    .test-row { display: flex; gap: 6px; }
-    .test-row input { flex: 1; }
-    .test-result { font-size: 11px; margin-top: 4px; min-height: 15px; }
-    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
-    .btn-primary {
-      padding: 8px 18px; background: var(--accent); color: white;
-      border: none; border-radius: 7px; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: filter 0.15s;
-    }
-    .btn-primary:hover { filter: brightness(1.1); }
-    .btn-ghost {
-      padding: 8px 14px; background: none; color: var(--muted);
-      border: 1px solid var(--border); border-radius: 7px; font-size: 13px;
-      cursor: pointer; transition: all 0.15s;
-    }
-    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
-
-    @media (max-width: 800px) {
-      main { grid-template-columns: 1fr; grid-template-rows: auto 1fr 1fr; }
-      .panel { border-right: none; border-bottom: 1px solid var(--border); }
-      #setup-panel { max-height: 280px; }
-    }
-  </style>
+@media(max-width:800px){
+  #analysis-tab.active{display:flex!important;flex-direction:column!important;overflow-y:auto}
+  #journal-tab.active{display:flex!important;flex-direction:column!important;grid-template-columns:unset}
+  .panel,.jform-panel{border-right:none;border-bottom:1px solid var(--border)}
+}
+</style>
 </head>
 <body>
 
 <!-- API Keys Modal -->
-<div class="modal-overlay" id="api-modal">
+<div class="mover" id="api-modal">
   <div class="modal">
     <h2>API Keys</h2>
-    <p>Stored only in your browser. Sent only to each provider's API. You only need the key(s) matching your analysts' providers.</p>
-    <label>Anthropic API Key <span style="font-weight:400">(Claude — starts with sk-ant-)</span></label>
-    <div class="test-row">
-      <input type="password" id="anthropic-key-input" placeholder="sk-ant-..." autocomplete="off" />
-      <button class="btn-ghost" onclick="testKey('anthropic')">Test</button>
-    </div>
-    <div class="test-result" id="anthropic-test-result"></div>
-    <label>OpenAI API Key <span style="font-weight:400">(ChatGPT — starts with sk-)</span></label>
-    <div class="test-row">
-      <input type="password" id="openai-key-input" placeholder="sk-..." autocomplete="off" />
-      <button class="btn-ghost" onclick="testKey('openai')">Test</button>
-    </div>
-    <div class="test-result" id="openai-test-result"></div>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('api-modal')">Cancel</button>
-      <button class="btn-primary" onclick="saveApiKeys()">Save</button>
+    <p>Stored only in your browser. You only need the key(s) for your analysts' providers.</p>
+    <label>Anthropic (Claude — starts with sk-ant-)</label>
+    <div class="trow"><input type="password" id="anth-in" placeholder="sk-ant-..." autocomplete="off"/><button class="btn-g" onclick="testKey('anthropic')">Test</button></div>
+    <div class="tres" id="anth-res"></div>
+    <label>OpenAI (ChatGPT — starts with sk-)</label>
+    <div class="trow"><input type="password" id="oai-in" placeholder="sk-..." autocomplete="off"/><button class="btn-g" onclick="testKey('openai')">Test</button></div>
+    <div class="tres" id="oai-res"></div>
+    <div class="macts">
+      <button class="btn-g" onclick="closeModal('api-modal')">Cancel</button>
+      <button class="btn-p" onclick="saveKeys()">Save</button>
     </div>
   </div>
 </div>
 
 <!-- Analyst Config Modal -->
-<div class="modal-overlay" id="analyst-modal">
+<div class="mover" id="analyst-modal">
   <div class="modal">
-    <h2 id="analyst-modal-title">Configure Analyst</h2>
-    <input type="hidden" id="analyst-modal-id" />
-    <label>Name</label>
-    <input type="text" id="analyst-name-input" placeholder="e.g. Bull Case" />
+    <h2 id="am-title">Configure Analyst</h2>
+    <input type="hidden" id="am-id"/>
+    <label>Name</label><input type="text" id="am-name" placeholder="e.g. Bull Case"/>
     <label>Provider</label>
-    <select id="analyst-provider-input" onchange="populateAnalystModelOptions()">
+    <select id="am-provider" onchange="fillModels()">
       <option value="anthropic">Anthropic (Claude)</option>
       <option value="openai">OpenAI (ChatGPT)</option>
     </select>
-    <label>Model</label>
-    <select id="analyst-model-input"></select>
-    <label>Analysis style <span style="font-weight:400">(optional)</span></label>
-    <textarea id="analyst-instructions-input" placeholder="e.g. Focus on upside catalysts and momentum. Be direct about price targets."></textarea>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('analyst-modal')">Cancel</button>
-      <button class="btn-primary" onclick="saveAnalyst()">Save</button>
+    <label>Model</label><select id="am-model"></select>
+    <label>Style (optional)</label>
+    <textarea id="am-inst" placeholder="e.g. Focus on upside catalysts. Give a clear price target."></textarea>
+    <div class="macts">
+      <button class="btn-g" onclick="closeModal('analyst-modal')">Cancel</button>
+      <button class="btn-p" onclick="saveAnalyst()">Save</button>
     </div>
   </div>
 </div>
 
 <!-- Header -->
 <header>
-  <div style="display:flex;align-items:center;gap:4px">
-    <div class="logo">Walk<span>Right</span></div>
-    <span class="logo-sub">Trader</span>
-  </div>
-  <div class="header-right">
-    <div id="status-badge"><div class="dot ready" id="status-dot"></div><span id="status-text">Ready</span></div>
-    <button class="hdr-btn" id="api-key-btn" onclick="openModal('api-modal')">API Keys</button>
+  <div class="logo">Walk<span>Right</span></div>
+  <span class="logo-sub">Trader</span>
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('portfolio')">Portfolio</button>
+    <button class="tab-btn" onclick="switchTab('analysis')">Analysis</button>
+    <button class="tab-btn" onclick="switchTab('journal')">Journal</button>
+  </nav>
+  <div class="hdr-right">
+    <div id="status-badge"><div class="dot ready" id="sdot"></div><span id="stxt">Ready</span></div>
+    <button class="hdr-btn" id="key-btn" onclick="openModal('api-modal')">API Keys</button>
   </div>
 </header>
 
-<!-- Setup bar -->
-<div id="setup-bar">
-  <div class="setup-field">
-    <label for="ticker-input">Ticker</label>
-    <input type="text" id="ticker-input" class="setup-input" placeholder="AAPL" maxlength="10" />
+<!-- ═══ PORTFOLIO TAB ═══ -->
+<div class="tab-panel active" id="portfolio-tab">
+  <div class="stats-bar">
+    <div class="stat-card"><div class="stat-label">Total Value</div><div class="stat-value" id="s-total">$0.00</div><div class="stat-sub neutral" id="s-total-sub">0 positions</div></div>
+    <div class="stat-card"><div class="stat-label">Unrealized P&amp;L</div><div class="stat-value" id="s-pnl">$0.00</div><div class="stat-sub neutral" id="s-pnl-pct">—</div></div>
+    <div class="stat-card"><div class="stat-label">Cost Basis</div><div class="stat-value" id="s-basis">$0.00</div><div class="stat-sub neutral" id="s-basis-sub">&nbsp;</div></div>
   </div>
-  <div class="setup-field">
-    <label for="price-input">Price</label>
-    <input type="text" id="price-input" class="setup-input" placeholder="195.40" />
+  <div class="table-scroll" id="port-scroll">
+    <div id="port-empty" class="empty-port"><div class="ei">📊</div><div>No positions yet.</div><div style="font-size:12px;margin-top:4px">Add your first position below.</div></div>
+    <table id="port-table" style="display:none">
+      <thead><tr>
+        <th>Symbol</th><th>Trend</th><th class="r">Shares</th>
+        <th class="r">Avg Cost</th><th class="r">Current</th>
+        <th class="r">Value</th><th class="r">P&amp;L</th><th class="r">%</th><th></th>
+      </tr></thead>
+      <tbody id="port-body"></tbody>
+    </table>
   </div>
-  <div class="setup-field">
-    <label for="timeframe-select">Timeframe</label>
-    <select id="timeframe-select">
-      <option value="intraday">Intraday</option>
-      <option value="swing" selected>Swing (days–weeks)</option>
-      <option value="position">Position (weeks–months)</option>
-      <option value="long-term">Long-term (months+)</option>
-    </select>
+  <div id="port-ai"><div class="port-ai-body" id="port-ai-body"></div></div>
+  <div class="add-bar">
+    <input class="add-in" id="ai-sym"    placeholder="AAPL"  maxlength="10"/>
+    <input class="add-in" id="ai-shares" placeholder="Shares" type="number" min="0" step="any"/>
+    <input class="add-in" id="ai-cost"   placeholder="Avg cost" type="number" min="0" step="any"/>
+    <input class="add-in" id="ai-cprice" placeholder="Price now" type="number" min="0" step="any"/>
+    <button class="add-btn" onclick="addPosition()">+ Add</button>
+    <button class="scan-btn" onclick="scanPortfolio()">AI Scan</button>
   </div>
 </div>
 
-<!-- Main columns -->
-<main>
+<!-- ═══ ANALYSIS TAB ═══ -->
+<div class="tab-panel" id="analysis-tab">
   <!-- Setup panel -->
-  <div class="panel" id="setup-panel">
-    <div class="panel-header">
-      <div class="panel-title-group">
-        <div class="panel-dot" style="background:var(--accent)"></div>
-        <span class="panel-title">Setup</span>
-      </div>
-      <button class="panel-action" onclick="clearSetup()">Clear</button>
-    </div>
-    <div class="panel-body" id="setup-body">
-      <div class="setup-form">
-        <div class="form-group">
-          <label class="form-label">Describe the setup</label>
-          <textarea class="form-input" id="setup-desc" rows="4"
-            placeholder="e.g. Breaking out of 3-month consolidation on high volume. RSI 58, MACD crossover forming. Earnings next week."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Direction bias</label>
-          <div class="tags-row" id="bias-tags">
-            <span class="tag active" data-val="long" onclick="selectBias(this)">Long</span>
-            <span class="tag" data-val="short" onclick="selectBias(this)">Short</span>
-            <span class="tag" data-val="neutral" onclick="selectBias(this)">Neutral</span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Catalysts / news</label>
-          <textarea class="form-input" id="setup-catalysts" rows="2"
-            placeholder="e.g. Fed meeting Wednesday, product launch rumor, sector rotation..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Risk context</label>
-          <div class="tags-row" id="risk-tags">
-            <span class="tag active" data-val="moderate" onclick="selectRisk(this)">Moderate</span>
-            <span class="tag" data-val="aggressive" onclick="selectRisk(this)">Aggressive</span>
-            <span class="tag" data-val="conservative" onclick="selectRisk(this)">Conservative</span>
-          </div>
-        </div>
-      </div>
-
-      <div id="history-section" style="display:none">
-        <div class="history-divider">Recent Setups</div>
-        <div id="history-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bull analyst panel -->
   <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title-group">
-        <div class="panel-dot" style="background:var(--col-a)"></div>
-        <span class="panel-title" id="title-a">Bull Case</span>
-        <button class="panel-edit" onclick="openAnalystModal('a')">✎</button>
+    <div class="ph"><div class="ph-left"><div class="pdot" style="background:var(--accent)"></div><span class="ptitle">Setup</span></div><button class="pact" onclick="clearSetup()">Clear</button></div>
+    <div class="pb" id="setup-pb">
+      <div class="top-row">
+        <div class="fg"><label class="fl">Ticker</label><input class="fi" id="s-ticker" placeholder="TSLA" maxlength="10" style="font-family:var(--mono);font-weight:700;text-transform:uppercase"/></div>
+        <div class="fg"><label class="fl">Price</label><input class="fi" id="s-price" placeholder="245.00" type="number" min="0" step="any"/></div>
       </div>
-      <button class="panel-action" onclick="clearFeedback('a')">Clear</button>
-    </div>
-    <div class="panel-body" id="feedback-a">
-      <div class="empty-state" id="empty-a">
-        <div class="icon">📈</div>
-        <div>Bull case analysis appears here.</div>
-        <div style="font-size:12px;margin-top:6px">Describe a setup and press <strong>Analyze</strong>.</div>
+      <div class="fg" style="margin-top:10px"><label class="fl">Timeframe</label>
+        <select class="fi" id="s-tf">
+          <option value="intraday">Intraday</option>
+          <option value="swing" selected>Swing (days–weeks)</option>
+          <option value="position">Position (weeks–months)</option>
+          <option value="long-term">Long-term (months+)</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Setup type</label>
+        <select class="fi" id="s-type">
+          <option value="">— Select —</option>
+          <option value="breakout">Breakout</option>
+          <option value="pullback">Pullback / dip buy</option>
+          <option value="reversal">Reversal</option>
+          <option value="momentum">Momentum continuation</option>
+          <option value="earnings">Earnings play</option>
+          <option value="sector-rotation">Sector rotation</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Description</label><textarea class="fi" id="s-desc" rows="3" placeholder="e.g. Breaking out of 8-week base on 2× average volume. RSI at 62, MACD just crossed positive."></textarea></div>
+      <div class="fg"><label class="fl">Bias</label>
+        <div class="tags" id="bias-tags">
+          <span class="tag on" data-v="long"    onclick="selBias(this)">Long</span>
+          <span class="tag"    data-v="short"   onclick="selBias(this)">Short</span>
+          <span class="tag"    data-v="neutral" onclick="selBias(this)">Neutral</span>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Catalysts / news</label><textarea class="fi" id="s-cat" rows="2" placeholder="e.g. Fed meeting Wed, product launch, sector rotation..."></textarea></div>
+      <div class="fg"><label class="fl">Risk</label>
+        <div class="tags" id="risk-tags">
+          <span class="tag on" data-v="moderate"     onclick="selRisk(this)">Moderate</span>
+          <span class="tag"    data-v="aggressive"   onclick="selRisk(this)">Aggressive</span>
+          <span class="tag"    data-v="conservative" onclick="selRisk(this)">Conservative</span>
+        </div>
+      </div>
+      <div id="hist-section" style="display:none">
+        <div class="hdiv">Recent Setups</div>
+        <div id="hist-list"></div>
       </div>
     </div>
   </div>
 
-  <!-- Bear analyst panel -->
+  <!-- Bull panel -->
   <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title-group">
-        <div class="panel-dot" style="background:var(--col-b)"></div>
-        <span class="panel-title" id="title-b">Bear / Risk</span>
-        <button class="panel-edit" onclick="openAnalystModal('b')">✎</button>
-      </div>
-      <button class="panel-action" onclick="clearFeedback('b')">Clear</button>
+    <div class="ph">
+      <div class="ph-left"><div class="pdot" style="background:var(--bull)"></div><span class="ptitle" id="title-a">Bull Case</span><button class="pedit" onclick="openAnalystModal('a')">✎</button></div>
+      <button class="pact" onclick="clearFb('a')">Clear</button>
     </div>
-    <div class="panel-body" id="feedback-b">
-      <div class="empty-state" id="empty-b">
-        <div class="icon">📉</div>
-        <div>Bear case &amp; risk analysis appears here.</div>
-        <div style="font-size:12px;margin-top:6px">Describe a setup and press <strong>Analyze</strong>.</div>
-      </div>
+    <div class="pb" id="fb-a">
+      <div class="empty" id="empty-a"><div class="ei">📈</div><div>Bull analysis appears here.</div></div>
     </div>
   </div>
-</main>
 
-<!-- Footer -->
-<footer>
-  <button id="analyze-btn" onclick="analyze()">
-    <span id="analyze-icon">◈</span>
-    <span id="analyze-label">Analyze</span>
-  </button>
-  <div class="footer-hint" id="footer-hint">
-    Enter a ticker and describe your setup, then press <strong>Analyze</strong>
+  <!-- Bear panel -->
+  <div class="panel">
+    <div class="ph">
+      <div class="ph-left"><div class="pdot" style="background:var(--bear)"></div><span class="ptitle" id="title-b">Bear / Risk</span><button class="pedit" onclick="openAnalystModal('b')">✎</button></div>
+      <button class="pact" onclick="clearFb('b')">Clear</button>
+    </div>
+    <div class="pb" id="fb-b">
+      <div class="empty" id="empty-b"><div class="ei">📉</div><div>Bear analysis appears here.</div></div>
+    </div>
   </div>
-  <div class="footer-btns">
-    <button class="sm-btn" onclick="clearAll()">Clear All</button>
+</div>
+
+<!-- Analysis footer (outside grid) -->
+<div id="afooter" style="display:none">
+  <button id="abtn" onclick="analyze()">◈ Analyze</button>
+  <div class="ahint">Cmd/Ctrl+Enter to analyze</div>
+</div>
+
+<!-- ═══ JOURNAL TAB ═══ -->
+<div class="tab-panel" id="journal-tab">
+  <div class="jform-panel">
+    <div class="ph"><div class="ph-left"><div class="pdot" style="background:var(--accent)"></div><span class="ptitle">Log Trade</span></div></div>
+    <div class="jfbody">
+      <div class="fg"><label class="fl">Direction</label>
+        <div class="dir-row">
+          <div class="dbtn buy on" id="dir-buy" onclick="selDir('buy')">▲ BUY / LONG</div>
+          <div class="dbtn sell" id="dir-sell" onclick="selDir('sell')">▼ SELL / SHORT</div>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Symbol</label><input class="fi" id="j-sym" placeholder="AAPL" maxlength="10" style="font-family:var(--mono);font-weight:700;text-transform:uppercase"/></div>
+      <div style="display:flex;gap:8px">
+        <div class="fg" style="flex:1"><label class="fl">Qty</label><input class="fi" id="j-qty" placeholder="100" type="number" min="0" step="any"/></div>
+        <div class="fg" style="flex:1"><label class="fl">Price</label><input class="fi" id="j-price" placeholder="195.00" type="number" min="0" step="any"/></div>
+      </div>
+      <div class="fg"><label class="fl">Date</label><input class="fi" id="j-date" type="date"/></div>
+      <div class="fg"><label class="fl">Reason / notes</label><textarea class="fi" id="j-notes" rows="3" placeholder="Why you took this trade..."></textarea></div>
+      <button class="log-btn" onclick="logTrade()">Log Trade</button>
+    </div>
   </div>
-</footer>
+  <div class="jentries">
+    <div class="jeh">
+      <div class="ph-left"><div class="pdot" style="background:var(--accent)"></div><span class="ptitle">Trade History</span></div>
+      <button class="pact" onclick="reviewAll()">AI Review All</button>
+    </div>
+    <div class="jebody" id="jebody">
+      <div class="empty-j" id="empty-j"><div class="ei">📓</div><div>No trades logged yet.</div><div style="font-size:12px;margin-top:4px">Log your first trade on the left.</div></div>
+    </div>
+  </div>
+</div>
 
 <script>
-// ── Analyst defaults ──────────────────────────────────────────────────────
+// ── Models ────────────────────────────────────────────────────────────────
 const MODELS = {
-  anthropic: [
-    { id: 'claude-opus-4-8',           label: 'Claude Opus 4 (thorough)' },
-    { id: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4 (fast)' },
-    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4 (fastest)' },
+  anthropic:[
+    {id:'claude-opus-4-8',         label:'Claude Opus 4 (best)'},
+    {id:'claude-sonnet-4-6',       label:'Claude Sonnet 4 (fast)'},
+    {id:'claude-haiku-4-5-20251001',label:'Claude Haiku 4 (fastest)'},
   ],
-  openai: [
-    { id: 'gpt-4o',      label: 'GPT-4o (recommended)' },
-    { id: 'gpt-4o-mini', label: 'GPT-4o mini (faster)' },
+  openai:[
+    {id:'gpt-4o',      label:'GPT-4o'},
+    {id:'gpt-4o-mini', label:'GPT-4o mini (faster)'},
   ],
 };
 
+// ── Analysts ──────────────────────────────────────────────────────────────
 const analysts = {
-  a: {
-    name: 'Bull Case',
-    provider: 'anthropic',
-    model: 'claude-opus-4-8',
-    color: '#4ade80',
-    tagClass: 'done-bull',
-    instructions: 'You are a bullish analyst. Identify the strongest upside case: key catalysts, technical breakout signals, momentum drivers, and realistic price targets. Be direct and specific. Note where the bull case is strongest.',
-  },
-  b: {
-    name: 'Bear / Risk',
-    provider: 'openai',
-    model: 'gpt-4o',
-    color: '#ef4444',
-    tagClass: 'done-bear',
-    instructions: 'You are a risk-focused bear analyst. Identify the key risks, downside scenarios, and potential failure points of this setup. Cover technical invalidation levels, macro headwinds, and specific things that could go wrong. Be honest about the risk/reward.',
-  },
+  a:{name:'Bull Case',provider:'anthropic',model:'claude-opus-4-8',color:'#4ade80',tagCls:'bull',
+     instructions:'You are a bullish analyst. Identify the strongest upside case: catalysts, technical signals, momentum, realistic price target, and ideal entry. Lead with the most compelling reason to be long. Be specific with price levels. End with a one-sentence verdict.'},
+  b:{name:'Bear / Risk',provider:'openai',model:'gpt-4o',color:'#ef4444',tagCls:'bear',
+     instructions:'You are a bearish risk analyst. Identify key risks, downside scenarios, and technical invalidation levels. Cover: what could go wrong, macro headwinds, and where to cut losses. Be direct. End with a one-sentence risk verdict.'},
 };
-
-// Load saved configs
-['a', 'b'].forEach(id => {
-  const saved = localStorage.getItem('wr_analyst_' + id);
-  if (saved) try { Object.assign(analysts[id], JSON.parse(saved)); } catch {}
-  const a = analysts[id];
-  if (a.model?.startsWith('gpt')) a.provider = 'openai';
-  else if (a.model?.startsWith('claude')) a.provider = 'anthropic';
-  if (!a.provider) a.provider = 'anthropic';
-  if (!MODELS[a.provider].some(m => m.id === a.model)) a.model = MODELS[a.provider][0].id;
-  document.getElementById('title-' + id).textContent = a.name;
+['a','b'].forEach(id=>{
+  const s=localStorage.getItem('wr_analyst_'+id);
+  if(s)try{Object.assign(analysts[id],JSON.parse(s))}catch{}
+  const a=analysts[id];
+  if(a.model?.startsWith('gpt'))a.provider='openai';
+  else if(a.model?.startsWith('claude'))a.provider='anthropic';
+  if(!MODELS[a.provider]?.some(m=>m.id===a.model))a.model=MODELS[a.provider][0].id;
+  document.getElementById('title-'+id).textContent=a.name;
 });
 
 // ── State ─────────────────────────────────────────────────────────────────
-const state = {
-  isAnalyzing: false,
-  bias: 'long',
-  risk: 'moderate',
-  keys: {
-    anthropic: localStorage.getItem('wr_key_anthropic') || '',
-    openai:    localStorage.getItem('wr_key_openai') || '',
-  },
-  history: JSON.parse(localStorage.getItem('wr_trade_history') || '[]'),
-  inProgress: { a: false, b: false },
+const S={
+  tab:'portfolio',
+  bias:'long',risk:'moderate',dir:'buy',
+  analyzing:false,inProg:{a:false,b:false},
+  keys:{anthropic:localStorage.getItem('wr_key_anth')||'',openai:localStorage.getItem('wr_key_oai')||''},
+  positions:JSON.parse(localStorage.getItem('wr_positions')||'[]'),
+  history:JSON.parse(localStorage.getItem('wr_setups')||'[]'),
+  trades:JSON.parse(localStorage.getItem('wr_trades')||'[]'),
 };
+if(S.keys.anthropic||S.keys.openai)markKeySet();
 
-// ── DOM ───────────────────────────────────────────────────────────────────
-const analyzeBtn   = document.getElementById('analyze-btn');
-const analyzeIcon  = document.getElementById('analyze-icon');
-const analyzeLabel = document.getElementById('analyze-label');
-const statusDot    = document.getElementById('status-dot');
-const statusText   = document.getElementById('status-text');
-const footerHint   = document.getElementById('footer-hint');
-const apiKeyBtn    = document.getElementById('api-key-btn');
-const tickerInput  = document.getElementById('ticker-input');
-const priceInput   = document.getElementById('price-input');
+// set today's date in journal form
+document.getElementById('j-date').value=new Date().toISOString().slice(0,10);
 
-if (state.keys.anthropic || state.keys.openai) markKeySet();
-renderHistory();
-
-tickerInput.addEventListener('input', () => {
-  tickerInput.value = tickerInput.value.toUpperCase();
-});
-
-// ── Bias / risk tags ──────────────────────────────────────────────────────
-function selectBias(el) {
-  document.querySelectorAll('#bias-tags .tag').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  state.bias = el.dataset.val;
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(t){
+  S.tab=t;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['portfolio','analysis','journal'][i]===t));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(t+'-tab').classList.add('active');
+  document.getElementById('afooter').style.display=t==='analysis'?'flex':'none';
 }
 
-function selectRisk(el) {
-  document.querySelectorAll('#risk-tags .tag').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  state.risk = el.dataset.val;
+// ── Portfolio ─────────────────────────────────────────────────────────────
+function savePositions(){localStorage.setItem('wr_positions',JSON.stringify(S.positions))}
+
+function addPosition(){
+  const sym=document.getElementById('ai-sym').value.trim().toUpperCase();
+  const shares=parseFloat(document.getElementById('ai-shares').value);
+  const cost=parseFloat(document.getElementById('ai-cost').value);
+  const price=parseFloat(document.getElementById('ai-cprice').value);
+  if(!sym||isNaN(shares)||isNaN(cost))return;
+  S.positions.push({sym,shares,cost,price:isNaN(price)?cost:price,id:Date.now()});
+  savePositions();
+  renderPortfolio();
+  ['ai-sym','ai-shares','ai-cost','ai-cprice'].forEach(id=>document.getElementById(id).value='');
 }
 
-// ── Analyze ───────────────────────────────────────────────────────────────
-function analyze() {
-  if (state.isAnalyzing) return;
-  if (!state.keys.anthropic && !state.keys.openai) { openModal('api-modal'); return; }
-
-  const ticker    = tickerInput.value.trim();
-  const price     = priceInput.value.trim();
-  const timeframe = document.getElementById('timeframe-select').value;
-  const desc      = document.getElementById('setup-desc').value.trim();
-  const catalysts = document.getElementById('setup-catalysts').value.trim();
-
-  if (!desc && !ticker) {
-    footerHint.innerHTML = '<span style="color:var(--warn)">Enter a ticker or describe a setup first.</span>';
-    setTimeout(() => { footerHint.innerHTML = 'Enter a ticker and describe your setup, then press <strong>Analyze</strong>'; }, 3000);
-    return;
-  }
-
-  const setup = { ticker, price, timeframe, desc, catalysts, bias: state.bias, risk: state.risk, ts: Date.now() };
-
-  saveToHistory(setup);
-
-  state.isAnalyzing = true;
-  analyzeBtn.classList.add('analyzing');
-  analyzeBtn.disabled = true;
-  analyzeLabel.textContent = 'Analyzing...';
-  footerHint.innerHTML = 'AI analysts are reviewing the setup...';
-  setStatus('thinking', 'Analyzing...');
-
-  requestBoth(setup);
+function deletePosition(id){
+  S.positions=S.positions.filter(p=>p.id!==id);
+  savePositions();
+  renderPortfolio();
 }
 
-function requestBoth(setup) {
-  ['a', 'b'].forEach(id => {
-    if (!state.inProgress[id]) requestAnalysis(id, setup);
-  });
+function updatePrice(id,val){
+  const p=S.positions.find(p=>p.id===id);
+  if(p){p.price=parseFloat(val)||p.price;savePositions();renderPortfolio();}
 }
 
-async function requestAnalysis(analystId, setup) {
-  const analyst = analysts[analystId];
-  if (!state.keys[analyst.provider]) { openModal('api-modal'); return; }
+function renderPortfolio(){
+  const body=document.getElementById('port-body');
+  const empty=document.getElementById('port-empty');
+  const tbl=document.getElementById('port-table');
+  if(!S.positions.length){empty.style.display='';tbl.style.display='none';updateStats();return}
+  empty.style.display='none';tbl.style.display='';
+  body.innerHTML=S.positions.map(p=>{
+    const val=p.shares*p.price;
+    const basis=p.shares*p.cost;
+    const pnl=val-basis;
+    const pct=(pnl/basis)*100;
+    const cls=pnl>0?'pnl-pos':pnl<0?'pnl-neg':'pnl-neu';
+    const arrow=pnl>0?'▲':pnl<0?'▼':'';
+    const spark=genSparkSVG(p.sym,p.price,p.price*0.9,p.price*1.1);
+    return `<tr>
+      <td><span class="sym">${esc(p.sym)}</span></td>
+      <td>${spark}</td>
+      <td class="r">${fmt(p.shares,0,true)}</td>
+      <td class="r">$${fmt(p.cost)}</td>
+      <td class="r"><input class="price-in" value="${p.price}" onchange="updatePrice(${p.id},this.value)" onblur="updatePrice(${p.id},this.value)"/></td>
+      <td class="r">$${fmt(val)}</td>
+      <td class="r ${cls}">${arrow} $${fmt(Math.abs(pnl))}</td>
+      <td class="r ${cls}">${arrow} ${Math.abs(pct).toFixed(1)}%</td>
+      <td><div class="row-acts">
+        <button class="row-btn" onclick="quickAnalyze('${esc(p.sym)}',${p.price})">Analyze</button>
+        <button class="row-btn del" onclick="deletePosition(${p.id})">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  updateStats();
+}
 
-  state.inProgress[analystId] = true;
+function updateStats(){
+  const total=S.positions.reduce((s,p)=>s+p.shares*p.price,0);
+  const basis=S.positions.reduce((s,p)=>s+p.shares*p.cost,0);
+  const pnl=total-basis;
+  const pct=basis?((pnl/basis)*100):0;
+  const pnlCls=pnl>0?'up':pnl<0?'down':'neutral';
+  const arrow=pnl>0?'▲':pnl<0?'▼':'';
+  set('s-total','$'+fmt(total));
+  set('s-total-sub',S.positions.length+' position'+(S.positions.length!==1?'s':''),S.positions.length?'neutral':'neutral');
+  set('s-pnl',`${arrow} $${fmt(Math.abs(pnl))}`,pnlCls);
+  set('s-pnl-pct',basis?`${arrow} ${Math.abs(pct).toFixed(2)}%`:'—',pnlCls);
+  set('s-basis','$'+fmt(basis));
+}
 
-  const fbBody = document.getElementById('feedback-' + analystId);
-  document.getElementById('empty-' + analystId).style.display = 'none';
+function set(id,txt,cls){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=txt;
+  if(cls){el.className='stat-sub '+cls}
+}
 
-  const card = document.createElement('div');
-  card.className = 'response-card streaming';
-  card.style.borderLeftColor = analyst.color;
-  card.innerHTML = `
-    <div class="card-meta">
-      <span class="card-tag thinking">Thinking...</span>
-      ${setup.ticker ? `<span class="card-ticker">${setup.ticker}${setup.price ? ' $' + setup.price : ''}</span>` : ''}
-      <span class="card-time">${fmtTime(new Date())}</span>
-    </div>
-    <div class="card-body"></div>`;
-  fbBody.appendChild(card);
-  scrollTo(fbBody);
+function quickAnalyze(sym,price){
+  switchTab('analysis');
+  document.getElementById('s-ticker').value=sym;
+  document.getElementById('s-price').value=price;
+  setTimeout(()=>document.getElementById('s-desc').focus(),80);
+}
 
-  const out = card.querySelector('.card-body');
-  let buffer = '';
+async function scanPortfolio(){
+  if(!S.positions.length)return;
+  if(!S.keys.anthropic&&!S.keys.openai){openModal('api-modal');return}
+  const panel=document.getElementById('port-ai');
+  const body=document.getElementById('port-ai-body');
+  panel.classList.add('open');
+  body.innerHTML='<span style="color:var(--muted)">Scanning portfolio…</span>';
+  setStatus('thinking','Scanning...');
+  const list=S.positions.map(p=>{
+    const pnl=((p.price-p.cost)/p.cost*100).toFixed(1);
+    return `${p.sym}: ${p.shares} shares @ $${p.cost} avg, now $${p.price} (${pnl>0?'+':''}${pnl}%)`;
+  }).join('\n');
+  const system='You are a portfolio analyst. Briefly assess this portfolio: overall balance, biggest risks, and one specific action to consider. Keep under 150 words. Be direct.';
+  const userMsg=`Portfolio:\n${list}`;
+  let buf='';
+  try{
+    if(S.keys.anthropic){
+      await streamAnth({model:analysts.a.model},system,userMsg,d=>{buf+=d;body.innerHTML=renderTxt(buf)});
+    }else{
+      await streamOAI({model:analysts.b.model},system,userMsg,d=>{buf+=d;body.innerHTML=renderTxt(buf)});
+    }
+  }catch(e){body.innerHTML=`<span style="color:var(--bear)">${e.message}</span>`}
+  setStatus('ready','Ready');
+}
 
-  const setupLines = [
-    setup.ticker  ? `Ticker: ${setup.ticker}` : null,
-    setup.price   ? `Current price: $${setup.price}` : null,
-    `Timeframe: ${setup.timeframe}`,
+// Seeded sparkline SVG
+function genSparkSVG(sym,current,lo,hi){
+  const seed=sym.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const rng=seeded(seed);
+  const pts=12;
+  const prices=[];
+  let p=current*(0.92+rng()*0.08);
+  for(let i=0;i<pts-1;i++){p*=0.995+rng()*0.01;prices.push(p)}
+  prices.push(current);
+  const min=Math.min(...prices),max=Math.max(...prices),range=max-min||1;
+  const W=60,H=20;
+  const points=prices.map((v,i)=>`${(i/(pts-1))*W},${H-((v-min)/range)*(H-2)-1}`).join(' ');
+  const upColor=current>=prices[0]?'#4ade80':'#ef4444';
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><polyline points="${points}" style="fill:none;stroke:${upColor};stroke-width:1.5;stroke-linejoin:round"/></svg>`;
+}
+function seeded(s){return()=>{s=(s*9301+49297)%233280;return s/233280}}
+
+// ── Analysis ──────────────────────────────────────────────────────────────
+let analysisBias='long', analysisRisk='moderate';
+function selBias(el){document.querySelectorAll('#bias-tags .tag').forEach(t=>t.classList.remove('on'));el.classList.add('on');analysisBias=el.dataset.v}
+function selRisk(el){document.querySelectorAll('#risk-tags .tag').forEach(t=>t.classList.remove('on'));el.classList.add('on');analysisRisk=el.dataset.v}
+
+document.getElementById('s-ticker').addEventListener('input',e=>e.target.value=e.target.value.toUpperCase());
+
+function analyze(){
+  if(S.analyzing)return;
+  if(!S.keys.anthropic&&!S.keys.openai){openModal('api-modal');return}
+  const ticker=document.getElementById('s-ticker').value.trim();
+  const price=document.getElementById('s-price').value.trim();
+  const tf=document.getElementById('s-tf').value;
+  const type=document.getElementById('s-type').value;
+  const desc=document.getElementById('s-desc').value.trim();
+  const cat=document.getElementById('s-cat').value.trim();
+  if(!desc&&!ticker){flash('Enter a ticker or describe a setup first.');return}
+  const setup={ticker,price,tf,type,desc,cat,bias:analysisBias,risk:analysisRisk,ts:Date.now()};
+  S.history.unshift(setup);
+  if(S.history.length>20)S.history=S.history.slice(0,20);
+  localStorage.setItem('wr_setups',JSON.stringify(S.history));
+  renderHistory();
+  S.analyzing=true;
+  const btn=document.getElementById('abtn');
+  btn.classList.add('analyzing');btn.disabled=true;
+  setStatus('thinking','Analyzing...');
+  ['a','b'].forEach(id=>{if(!S.inProg[id])doAnalysis(id,setup)});
+}
+
+async function doAnalysis(id,setup){
+  const an=analysts[id];
+  if(!S.keys[an.provider]){openModal('api-modal');return}
+  S.inProg[id]=true;
+  const fb=document.getElementById('fb-'+id);
+  document.getElementById('empty-'+id).style.display='none';
+  const card=document.createElement('div');
+  card.className='rcard stream';
+  card.style.borderLeftColor=an.color;
+  card.innerHTML=`<div class="cmeta"><span class="ctag thinking">Thinking…</span>${setup.ticker?`<span class="cticker">${esc(setup.ticker)}${setup.price?' $'+setup.price:''}</span>`:''}<span class="ctime">${fmtTime()}</span></div><div class="cbody"></div>`;
+  fb.appendChild(card);
+  scrollEl(fb);
+  const out=card.querySelector('.cbody');
+  let buf='';
+  const parts=[
+    setup.ticker?`Ticker: ${setup.ticker}`:null,
+    setup.price?`Price: $${setup.price}`:null,
+    `Timeframe: ${setup.tf}`,
+    setup.type?`Setup type: ${setup.type}`:null,
     `Trader bias: ${setup.bias}`,
     `Risk tolerance: ${setup.risk}`,
-    setup.desc      ? `\nSetup description:\n${setup.desc}` : null,
-    setup.catalysts ? `\nCatalysts / news:\n${setup.catalysts}` : null,
+    setup.desc?`\nSetup:\n${setup.desc}`:null,
+    setup.cat?`\nCatalysts:\n${setup.cat}`:null,
   ].filter(Boolean).join('\n');
-
-  const system = [
-    analyst.instructions,
-    '',
-    'Formatting rules:',
-    '- Lead with the single most important point',
-    '- Use short paragraphs, not bullet lists',
-    '- Include a specific price level or percentage where relevant',
-    '- End with a one-sentence verdict',
-    '- Keep the full response under 200 words',
-    '- Do NOT add disclaimers about this not being financial advice',
-  ].join('\n');
-
-  const userMsg = `Here is the trade setup to analyze:\n\n${setupLines}`;
-
-  try {
-    if (analyst.provider === 'anthropic') {
-      await streamAnthropic(analyst, system, userMsg, d => {
-        buffer += d;
-        out.innerHTML = renderText(buffer) + '<span class="cursor"></span>';
-        scrollTo(fbBody);
-      });
-    } else {
-      await streamOpenAI(analyst, system, userMsg, d => {
-        buffer += d;
-        out.innerHTML = renderText(buffer) + '<span class="cursor"></span>';
-        scrollTo(fbBody);
-      });
+  const sys=[an.instructions,'','Rules:','- Lead with the most important point','- Include specific price levels','- Short paragraphs, no bullet lists','- Under 180 words','- End with a one-sentence verdict','- No disclaimers about financial advice'].join('\n');
+  try{
+    if(an.provider==='anthropic'){
+      await streamAnth(an,sys,`Analyze this trade setup:\n\n${parts}`,d=>{buf+=d;out.innerHTML=renderTxt(buf)+'<span class="cursor"></span>';scrollEl(fb)});
+    }else{
+      await streamOAI(an,sys,`Analyze this trade setup:\n\n${parts}`,d=>{buf+=d;out.innerHTML=renderTxt(buf)+'<span class="cursor"></span>';scrollEl(fb)});
     }
-
-    out.innerHTML = renderText(buffer);
-    card.classList.remove('streaming');
-    const tag = card.querySelector('.card-tag');
-    tag.className = 'card-tag ' + analyst.tagClass;
-    tag.textContent = analyst.name;
-
-  } catch (err) {
-    const isKeyErr = /401|invalid|api[-_]?key|incorrect|authentication/i.test(err.message);
-    if (isKeyErr) {
-      out.innerHTML = `<span style="color:var(--danger)">Invalid ${analyst.provider === 'anthropic' ? 'Anthropic' : 'OpenAI'} key — click API Keys to fix it.</span>`;
-      openModal('api-modal');
-    } else {
-      out.innerHTML = `<span style="color:var(--bear)">${err.message}</span>`;
-    }
-    card.classList.remove('streaming');
+    out.innerHTML=renderTxt(buf);
+    card.classList.remove('stream');
+    const tag=card.querySelector('.ctag');
+    tag.className='ctag '+an.tagCls;tag.textContent=an.name;
+  }catch(e){
+    const keyErr=/401|invalid|api.?key|auth/i.test(e.message);
+    if(keyErr)openModal('api-modal');
+    out.innerHTML=`<span style="color:var(--bear)">${e.message}</span>`;
+    card.classList.remove('stream');
   }
-
-  state.inProgress[analystId] = false;
-  if (!state.inProgress.a && !state.inProgress.b) {
-    state.isAnalyzing = false;
-    analyzeBtn.classList.remove('analyzing');
-    analyzeBtn.disabled = false;
-    analyzeLabel.textContent = 'Analyze';
-    setStatus('ready', 'Ready');
-    footerHint.innerHTML = 'Enter a ticker and describe your setup, then press <strong>Analyze</strong>';
+  S.inProg[id]=false;
+  if(!S.inProg.a&&!S.inProg.b){
+    S.analyzing=false;
+    const btn=document.getElementById('abtn');
+    btn.classList.remove('analyzing');btn.disabled=false;
+    setStatus('ready','Ready');
   }
 }
 
-// ── Anthropic ─────────────────────────────────────────────────────────────
-async function streamAnthropic(analyst, system, user, onDelta) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': state.keys.anthropic,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: analyst.model, max_tokens: 400, stream: true,
-      system, messages: [{ role: 'user', content: user }]
-    })
-  });
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
-  await readSSE(res, data => { const p = JSON.parse(data); if (p.delta?.text) onDelta(p.delta.text); });
+function renderHistory(){
+  const list=document.getElementById('hist-list');
+  const sec=document.getElementById('hist-section');
+  if(!S.history.length){sec.style.display='none';return}
+  sec.style.display='';
+  list.innerHTML=S.history.map((s,i)=>{
+    const bCls=s.bias==='long'?'up':s.bias==='short'?'down':'neutral';
+    return `<div class="hitem" onclick="loadSetup(${i})">
+      <div style="display:flex;align-items:center;gap:6px">
+        ${s.ticker?`<span class="hticker">${esc(s.ticker)}</span>`:''}
+        <span class="${bCls}" style="font-size:10px;font-weight:700;text-transform:uppercase">${s.bias}</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:auto">${fmtAge(s.ts)}</span>
+      </div>
+      ${s.desc?`<div class="hsnip">${esc(s.desc)}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
-// ── OpenAI ────────────────────────────────────────────────────────────────
-async function streamOpenAI(analyst, system, user, onDelta) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.keys.openai },
-    body: JSON.stringify({
-      model: analyst.model, max_tokens: 400, stream: true,
-      messages: [{ role: 'system', content: system }, { role: 'user', content: user }]
-    })
-  });
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
-  await readSSE(res, data => {
-    const p = JSON.parse(data);
-    const t = p.choices?.[0]?.delta?.content;
-    if (t) onDelta(t);
-  });
+function loadSetup(i){
+  const s=S.history[i];
+  document.getElementById('s-ticker').value=s.ticker||'';
+  document.getElementById('s-price').value=s.price||'';
+  document.getElementById('s-tf').value=s.tf||'swing';
+  document.getElementById('s-type').value=s.type||'';
+  document.getElementById('s-desc').value=s.desc||'';
+  document.getElementById('s-cat').value=s.cat||'';
+  document.querySelectorAll('#bias-tags .tag').forEach(t=>t.classList.toggle('on',t.dataset.v===s.bias));
+  analysisBias=s.bias||'long';
+  document.querySelectorAll('#risk-tags .tag').forEach(t=>t.classList.toggle('on',t.dataset.v===s.risk));
+  analysisRisk=s.risk||'moderate';
 }
 
-// ── SSE reader ────────────────────────────────────────────────────────────
-async function readSSE(res, handle) {
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of dec.decode(value, { stream: true }).split('\n')) {
-      if (!line.startsWith('data: ')) continue;
-      const raw = line.slice(6).trim();
-      if (!raw || raw === '[DONE]') continue;
-      try { handle(raw); } catch {}
+function clearSetup(){
+  ['s-ticker','s-price','s-desc','s-cat'].forEach(id=>document.getElementById(id).value='');
+}
+function clearFb(id){
+  const b=document.getElementById('fb-'+id),e=document.getElementById('empty-'+id);
+  b.innerHTML='';b.appendChild(e);e.style.display='';
+}
+
+// Keyboard shortcut in analysis tab
+document.getElementById('s-desc').addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();analyze()}
+});
+
+// ── Journal ───────────────────────────────────────────────────────────────
+let journalDir='buy';
+function selDir(d){
+  journalDir=d;
+  document.getElementById('dir-buy').classList.toggle('on',d==='buy');
+  document.getElementById('dir-sell').classList.toggle('on',d==='sell');
+}
+document.getElementById('j-sym').addEventListener('input',e=>e.target.value=e.target.value.toUpperCase());
+
+function logTrade(){
+  const sym=document.getElementById('j-sym').value.trim().toUpperCase();
+  const qty=parseFloat(document.getElementById('j-qty').value);
+  const price=parseFloat(document.getElementById('j-price').value);
+  const date=document.getElementById('j-date').value;
+  const notes=document.getElementById('j-notes').value.trim();
+  if(!sym||isNaN(price))return;
+  S.trades.unshift({sym,qty:isNaN(qty)?null:qty,price,date,notes,dir:journalDir,id:Date.now()});
+  localStorage.setItem('wr_trades',JSON.stringify(S.trades));
+  renderJournal();
+  document.getElementById('j-sym').value='';
+  document.getElementById('j-qty').value='';
+  document.getElementById('j-price').value='';
+  document.getElementById('j-notes').value='';
+}
+
+function renderJournal(){
+  const body=document.getElementById('jebody');
+  const empty=document.getElementById('empty-j');
+  if(!S.trades.length){empty.style.display='';return}
+  empty.style.display='none';
+  // keep existing AI responses
+  const aiMap={};
+  body.querySelectorAll('.jentry').forEach(el=>{
+    const r=el.querySelector('.jai-resp');
+    if(r)aiMap[el.dataset.id]=r.innerHTML;
+  });
+  body.innerHTML=S.trades.map(t=>`
+    <div class="jentry ${t.dir}" data-id="${t.id}">
+      <div class="jeh-row">
+        <span class="jsym">${esc(t.sym)}</span>
+        <span class="badge ${t.dir}">${t.dir.toUpperCase()}</span>
+        ${t.qty?`<span class="jmeta">${fmt(t.qty,0,true)} @ $${fmt(t.price)}</span>`:`<span class="jmeta">$${fmt(t.price)}</span>`}
+        ${t.date?`<span class="jdate">${t.date}</span>`:''}
+      </div>
+      ${t.notes?`<div class="jnotes">${esc(t.notes)}</div>`:''}
+      <span class="jai-btn" onclick="reviewTrade(${t.id})">Ask AI</span>
+      ${aiMap[t.id]?`<div class="jai-resp">${aiMap[t.id]}</div>`:''}
+    </div>`).join('');
+}
+
+async function reviewTrade(id){
+  if(!S.keys.anthropic&&!S.keys.openai){openModal('api-modal');return}
+  const t=S.trades.find(t=>t.id===id);if(!t)return;
+  const entry=document.querySelector(`.jentry[data-id="${id}"]`);if(!entry)return;
+  let resp=entry.querySelector('.jai-resp');
+  if(!resp){resp=document.createElement('div');resp.className='jai-resp';entry.appendChild(resp)}
+  resp.innerHTML='<span style="color:var(--muted)">Reviewing…<span class="cursor"></span></span>';
+  const sys='You are a trading coach reviewing a trade log entry. Give honest, direct feedback in 3-4 sentences: what was good about the reasoning, what risk was taken, and one specific improvement for next time.';
+  const msg=`Trade: ${t.dir.toUpperCase()} ${t.sym}${t.qty?' x'+t.qty:''} @ $${t.price}${t.date?' on '+t.date:''}${t.notes?'\nReason: '+t.notes:''}`;
+  let buf='';
+  try{
+    if(S.keys.anthropic){
+      await streamAnth({model:analysts.a.model},sys,msg,d=>{buf+=d;resp.innerHTML=renderTxt(buf)+'<span class="cursor"></span>'});
+    }else{
+      await streamOAI({model:analysts.b.model},sys,msg,d=>{buf+=d;resp.innerHTML=renderTxt(buf)+'<span class="cursor"></span>'});
+    }
+    resp.innerHTML=renderTxt(buf);
+  }catch(e){resp.innerHTML=`<span style="color:var(--bear)">${e.message}</span>`}
+}
+
+async function reviewAll(){
+  if(!S.trades.length)return;
+  if(!S.keys.anthropic&&!S.keys.openai){openModal('api-modal');return}
+  const list=S.trades.slice(0,10).map(t=>`${t.dir.toUpperCase()} ${t.sym} @ $${t.price}${t.notes?' — '+t.notes:''}`).join('\n');
+  const sys='You are a trading coach reviewing a trade journal. Give a brief overall assessment (3-5 sentences): patterns you notice, risk habits, and one concrete suggestion to improve.';
+  switchTab('journal');
+  const body=document.getElementById('jebody');
+  let card=document.getElementById('review-all-card');
+  if(!card){
+    card=document.createElement('div');
+    card.id='review-all-card';
+    card.className='rcard stream';
+    card.style.borderLeftColor='var(--accent)';
+    card.innerHTML='<div class="cmeta"><span class="ctag thinking">AI Review</span><span class="ctime">'+fmtTime()+'</span></div><div class="cbody"></div>';
+    body.insertBefore(card,body.firstChild);
+  }
+  const out=card.querySelector('.cbody');
+  let buf='';
+  setStatus('thinking','Reviewing...');
+  try{
+    if(S.keys.anthropic){
+      await streamAnth({model:analysts.a.model},sys,`Recent trades:\n${list}`,d=>{buf+=d;out.innerHTML=renderTxt(buf)+'<span class="cursor"></span>'});
+    }else{
+      await streamOAI({model:analysts.b.model},sys,`Recent trades:\n${list}`,d=>{buf+=d;out.innerHTML=renderTxt(buf)+'<span class="cursor"></span>'});
+    }
+    out.innerHTML=renderTxt(buf);
+    card.classList.remove('stream');
+    card.querySelector('.ctag').className='ctag ai';
+    card.querySelector('.ctag').textContent='Portfolio Review';
+  }catch(e){out.innerHTML=`<span style="color:var(--bear)">${e.message}</span>`;card.classList.remove('stream')}
+  setStatus('ready','Ready');
+}
+
+// ── Streaming ─────────────────────────────────────────────────────────────
+async function streamAnth(cfg,sys,user,onD){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':S.keys.anthropic,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:cfg.model,max_tokens:400,stream:true,system:sys,messages:[{role:'user',content:user}]})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`)}
+  await readSSE(r,raw=>{const p=JSON.parse(raw);if(p.delta?.text)onD(p.delta.text)});
+}
+async function streamOAI(cfg,sys,user,onD){
+  const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.keys.openai},
+    body:JSON.stringify({model:cfg.model,max_tokens:400,stream:true,messages:[{role:'system',content:sys},{role:'user',content:user}]})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`)}
+  await readSSE(r,raw=>{const p=JSON.parse(raw);const t=p.choices?.[0]?.delta?.content;if(t)onD(t)});
+}
+async function readSSE(r,handle){
+  const reader=r.body.getReader();const dec=new TextDecoder();
+  while(true){const{done,value}=await reader.read();if(done)break;
+    for(const line of dec.decode(value,{stream:true}).split('\n')){
+      if(!line.startsWith('data: '))continue;
+      const raw=line.slice(6).trim();if(!raw||raw==='[DONE]')continue;
+      try{handle(raw)}catch{}
     }
   }
 }
 
 // ── Key tester ────────────────────────────────────────────────────────────
-async function testKey(provider) {
-  const key = document.getElementById(provider + '-key-input').value.trim();
-  const resultEl = document.getElementById(provider + '-test-result');
-
-  if (!key) { resultEl.innerHTML = '<span style="color:var(--warn)">Paste a key first.</span>'; return; }
-
-  const prefix = provider === 'anthropic' ? 'sk-ant-' : 'sk-';
-  if (!key.startsWith(prefix)) {
-    resultEl.innerHTML = `<span style="color:var(--warn)">Should start with "${prefix}" — double-check the copy.</span>`;
-    return;
-  }
-  if (/\s/.test(key)) {
-    resultEl.innerHTML = '<span style="color:var(--warn)">Contains a space — re-copy it.</span>';
-    return;
-  }
-
-  resultEl.innerHTML = '<span style="color:var(--muted)">Testing…</span>';
-
-  try {
-    let res, data;
-    if (provider === 'anthropic') {
-      res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': key,
-          'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5,
-          messages: [{ role: 'user', content: 'hi' }] })
-      });
-      data = await res.json().catch(() => ({}));
-    } else {
-      res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-        body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 5,
-          messages: [{ role: 'user', content: 'hi' }] })
-      });
-      data = await res.json().catch(() => ({}));
+async function testKey(provider){
+  const key=document.getElementById(provider==='anthropic'?'anth-in':'oai-in').value.trim();
+  const res=document.getElementById(provider==='anthropic'?'anth-res':'oai-res');
+  if(!key){res.innerHTML='<span style="color:var(--warn)">Paste a key first.</span>';return}
+  const prefix=provider==='anthropic'?'sk-ant-':'sk-';
+  if(!key.startsWith(prefix)){res.innerHTML=`<span style="color:var(--warn)">Should start with "${prefix}"</span>`;return}
+  res.innerHTML='<span style="color:var(--muted)">Testing…</span>';
+  try{
+    let r,d;
+    if(provider==='anthropic'){
+      r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:5,messages:[{role:'user',content:'hi'}]})});
+      d=await r.json().catch(()=>({}));
+    }else{
+      r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+        body:JSON.stringify({model:'gpt-4o-mini',max_tokens:5,messages:[{role:'user',content:'hi'}]})});
+      d=await r.json().catch(()=>({}));
     }
-
-    if (res.ok) {
-      resultEl.innerHTML = '<span style="color:var(--bull)">Key works — click Save.</span>';
-    } else {
-      const msg = data.error?.message || `HTTP ${res.status}`;
-      const hint = /billing|credit|quota/i.test(msg) ? ' — add credits in the console' :
-                   /auth|invalid|key/i.test(msg) ? ' — key is wrong or revoked' : '';
-      resultEl.innerHTML = `<span style="color:var(--bear)">${msg}${hint}</span>`;
-    }
-  } catch (e) {
-    resultEl.innerHTML = `<span style="color:var(--bear)">${e.message}</span>`;
-  }
+    if(r.ok)res.innerHTML='<span style="color:var(--bull)">Key works — click Save.</span>';
+    else{const m=d.error?.message||`HTTP ${r.status}`;res.innerHTML=`<span style="color:var(--bear)">${m}</span>`}
+  }catch(e){res.innerHTML=`<span style="color:var(--bear)">${e.message}</span>`}
 }
 
-// ── History ───────────────────────────────────────────────────────────────
-function saveToHistory(setup) {
-  state.history.unshift(setup);
-  if (state.history.length > 20) state.history = state.history.slice(0, 20);
-  localStorage.setItem('wr_trade_history', JSON.stringify(state.history));
-  renderHistory();
-}
-
-function renderHistory() {
-  const list = document.getElementById('history-list');
-  const section = document.getElementById('history-section');
-  if (!state.history.length) { section.style.display = 'none'; return; }
-  section.style.display = '';
-  list.innerHTML = state.history.map((s, i) => {
-    const biasClass = s.bias === 'long' ? 'badge-bull' : s.bias === 'short' ? 'badge-bear' : 'badge-neutral';
-    const biasLabel = s.bias === 'long' ? 'LONG' : s.bias === 'short' ? 'SHORT' : 'NEUTRAL';
-    return `
-      <div class="history-item" onclick="loadSetup(${i})">
-        <div style="display:flex;align-items:center;gap:6px">
-          ${s.ticker ? `<span class="history-ticker">${s.ticker}</span>` : ''}
-          <span class="${biasClass}">${biasLabel}</span>
-          <span style="font-size:10px;color:var(--muted);margin-left:auto">${fmtAge(s.ts)}</span>
-        </div>
-        ${s.desc ? `<div class="history-snip">${escHtml(s.desc)}</div>` : ''}
-      </div>`;
-  }).join('');
-}
-
-function loadSetup(idx) {
-  const s = state.history[idx];
-  tickerInput.value = s.ticker || '';
-  priceInput.value  = s.price  || '';
-  if (s.timeframe) document.getElementById('timeframe-select').value = s.timeframe;
-  document.getElementById('setup-desc').value = s.desc || '';
-  document.getElementById('setup-catalysts').value = s.catalysts || '';
-  // restore bias
-  document.querySelectorAll('#bias-tags .tag').forEach(t => {
-    t.classList.toggle('active', t.dataset.val === s.bias);
-  });
-  state.bias = s.bias || 'long';
-  // restore risk
-  document.querySelectorAll('#risk-tags .tag').forEach(t => {
-    t.classList.toggle('active', t.dataset.val === s.risk);
-  });
-  state.risk = s.risk || 'moderate';
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-function setStatus(type, text) {
-  statusDot.className = 'dot' + (type ? ' ' + type : '');
-  statusText.textContent = text;
-}
-function fmtTime(d) { return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
-function fmtAge(ts) {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60)  return 'just now';
-  if (s < 3600) return Math.floor(s / 60) + 'm ago';
-  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
-  return Math.floor(s / 86400) + 'd ago';
-}
-function scrollTo(el) { requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; }); }
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function renderText(t) {
-  return t.split('\n').map(l => l.trim()).filter(Boolean).map(l => `<div>${escHtml(l)}</div>`).join('');
-}
-function markKeySet() { apiKeyBtn.classList.add('set'); apiKeyBtn.textContent = 'Keys Set'; }
-
-function clearSetup() {
-  tickerInput.value = '';
-  priceInput.value  = '';
-  document.getElementById('setup-desc').value = '';
-  document.getElementById('setup-catalysts').value = '';
-}
-function clearFeedback(id) {
-  const b = document.getElementById('feedback-' + id);
-  const e = document.getElementById('empty-' + id);
-  b.innerHTML = ''; b.appendChild(e); e.style.display = '';
-}
-function clearAll() { clearSetup(); clearFeedback('a'); clearFeedback('b'); }
-
-// ── Modals ────────────────────────────────────────────────────────────────
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-  if (id === 'api-modal') {
-    document.getElementById('anthropic-key-input').value = state.keys.anthropic;
-    document.getElementById('openai-key-input').value    = state.keys.openai;
-    document.getElementById('anthropic-test-result').innerHTML = '';
-    document.getElementById('openai-test-result').innerHTML    = '';
-    setTimeout(() => document.getElementById('anthropic-key-input').focus(), 80);
-  }
-}
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-function saveApiKeys() {
-  state.keys.anthropic = document.getElementById('anthropic-key-input').value.trim();
-  state.keys.openai    = document.getElementById('openai-key-input').value.trim();
-  localStorage.setItem('wr_key_anthropic', state.keys.anthropic);
-  localStorage.setItem('wr_key_openai',    state.keys.openai);
-  if (state.keys.anthropic || state.keys.openai) markKeySet();
+// ── API key modal ─────────────────────────────────────────────────────────
+function saveKeys(){
+  S.keys.anthropic=document.getElementById('anth-in').value.trim();
+  S.keys.openai=document.getElementById('oai-in').value.trim();
+  localStorage.setItem('wr_key_anth',S.keys.anthropic);
+  localStorage.setItem('wr_key_oai',S.keys.openai);
+  if(S.keys.anthropic||S.keys.openai)markKeySet();
   closeModal('api-modal');
 }
+function markKeySet(){document.getElementById('key-btn').classList.add('set');document.getElementById('key-btn').textContent='Keys Set'}
 
-function openAnalystModal(id) {
-  const a = analysts[id];
-  document.getElementById('analyst-modal-id').value = id;
-  document.getElementById('analyst-modal-title').textContent = `Configure ${a.name}`;
-  document.getElementById('analyst-name-input').value = a.name;
-  document.getElementById('analyst-provider-input').value = a.provider;
-  populateAnalystModelOptions(a.model);
-  document.getElementById('analyst-instructions-input').value = a.instructions || '';
+// ── Analyst modal ─────────────────────────────────────────────────────────
+function openAnalystModal(id){
+  const a=analysts[id];
+  document.getElementById('am-id').value=id;
+  document.getElementById('am-title').textContent='Configure '+a.name;
+  document.getElementById('am-name').value=a.name;
+  document.getElementById('am-provider').value=a.provider;
+  fillModels(a.model);
+  document.getElementById('am-inst').value=a.instructions||'';
   openModal('analyst-modal');
 }
-
-function populateAnalystModelOptions(selected) {
-  const provider = document.getElementById('analyst-provider-input').value;
-  const sel = document.getElementById('analyst-model-input');
-  sel.innerHTML = MODELS[provider].map(m => `<option value="${m.id}">${m.label}</option>`).join('');
-  if (selected && MODELS[provider].some(m => m.id === selected)) sel.value = selected;
+function fillModels(sel){
+  const prov=document.getElementById('am-provider').value;
+  const el=document.getElementById('am-model');
+  el.innerHTML=MODELS[prov].map(m=>`<option value="${m.id}">${m.label}</option>`).join('');
+  if(sel&&MODELS[prov].some(m=>m.id===sel))el.value=sel;
 }
-
-function saveAnalyst() {
-  const id = document.getElementById('analyst-modal-id').value;
-  const a = analysts[id];
-  a.name         = document.getElementById('analyst-name-input').value.trim() || a.name;
-  a.provider     = document.getElementById('analyst-provider-input').value;
-  a.model        = document.getElementById('analyst-model-input').value;
-  a.instructions = document.getElementById('analyst-instructions-input').value.trim();
-  localStorage.setItem('wr_analyst_' + id, JSON.stringify(a));
-  document.getElementById('title-' + id).textContent = a.name;
+function saveAnalyst(){
+  const id=document.getElementById('am-id').value;
+  const a=analysts[id];
+  a.name=document.getElementById('am-name').value.trim()||a.name;
+  a.provider=document.getElementById('am-provider').value;
+  a.model=document.getElementById('am-model').value;
+  a.instructions=document.getElementById('am-inst').value.trim();
+  localStorage.setItem('wr_analyst_'+id,JSON.stringify(a));
+  document.getElementById('title-'+id).textContent=a.name;
   closeModal('analyst-modal');
 }
 
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
-});
+// ── Modal helpers ─────────────────────────────────────────────────────────
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='api-modal'){
+    document.getElementById('anth-in').value=S.keys.anthropic;
+    document.getElementById('oai-in').value=S.keys.openai;
+    document.getElementById('anth-res').innerHTML='';
+    document.getElementById('oai-res').innerHTML='';
+    setTimeout(()=>document.getElementById('anth-in').focus(),80);
+  }
+}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.mover').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)closeModal(el.id)}));
 
-// Keyboard shortcut: Enter in setup description fires analyze
-document.getElementById('setup-desc').addEventListener('keydown', e => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); analyze(); }
-});
+// ── Utilities ─────────────────────────────────────────────────────────────
+function setStatus(type,txt){
+  document.getElementById('sdot').className='dot'+(type?' '+type:'');
+  document.getElementById('stxt').textContent=txt;
+}
+function fmtTime(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+function fmtAge(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'}
+function fmt(n,dec=2,noComma=false){if(isNaN(n))return'0.00';const s=n.toFixed(dec);return noComma?s:parseFloat(s).toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec})}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function renderTxt(t){return t.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>`<div>${esc(l)}</div>`).join('')}
+function scrollEl(el){requestAnimationFrame(()=>el.scrollTop=el.scrollHeight)}
+function flash(msg){const h=document.querySelector('.ahint');const orig=h.innerHTML;h.innerHTML=`<span style="color:var(--warn)">${msg}</span>`;setTimeout(()=>h.innerHTML=orig,3000)}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderPortfolio();
+renderHistory();
+renderJournal();
 </script>
 </body>
 </html>
