@@ -23,6 +23,14 @@ type Condition = {
   stats: Record<Horizon, HorizonStats>;
 };
 
+type YearTrade = {
+  signal: string;
+  entry: string;
+  exit: string;
+  setup: number;
+  result: number;
+};
+
 const HORIZONS: Horizon[] = [2, 3, 5, 10, 15];
 
 const CONDITIONS: Condition[] = [
@@ -163,6 +171,31 @@ const ANALOGS = [
   { date: "Feb 13, 2026", setup: -1.50, day5: 0.09, day10: 0.68 },
 ];
 
+const YEAR_BACKTEST = {
+  start: "Jul 24, 2025",
+  end: "Jul 24, 2026",
+  sessions: 252,
+  benchmark: 16.47,
+  currentReturn: -0.69,
+  winRate: 33.3,
+  maxDrawdown: -1.19,
+  trades: 3,
+  candidateReturn: 1.67,
+  candidateTrades: 2,
+  variants: [
+    { hold: 2, trades: 3, winRate: 33.3, result: -2.32, verdict: "Reject" },
+    { hold: 3, trades: 3, winRate: 33.3, result: -2.39, verdict: "Reject" },
+    { hold: 5, trades: 3, winRate: 33.3, result: -0.69, verdict: "Current" },
+    { hold: 10, trades: 2, winRate: 100, result: 1.67, verdict: "Paper test" },
+    { hold: 15, trades: 1, winRate: 0, result: -0.42, verdict: "Too thin" },
+  ],
+  tradeLog: [
+    { signal: "Jun 5, 2026", entry: "Jun 8", exit: "Jun 12", setup: -2.90, result: -0.32 },
+    { signal: "Jun 24, 2026", entry: "Jun 25", exit: "Jul 1", setup: -1.81, result: 0.83 },
+    { signal: "Jul 17, 2026", entry: "Jul 20", exit: "Jul 24", setup: -1.14, result: -1.19 },
+  ] satisfies YearTrade[],
+};
+
 function signed(value: number, digits = 1) {
   return `${value > 0 ? "+" : ""}${value.toFixed(digits)}%`;
 }
@@ -291,6 +324,7 @@ export default function Home() {
   const [horizon, setHorizon] = useState<Horizon>(5);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
   const [callWeight, setCallWeight] = useState(70);
+  const [startingCapital, setStartingCapital] = useState(10_000);
 
   const condition = CONDITIONS.find((item) => item.id === conditionId) ?? CONDITIONS[0];
   const stats = condition.stats[horizon];
@@ -581,6 +615,143 @@ export default function Home() {
 
         {tab === "backtests" && (
           <div className="tab-panel backtest-panel">
+            <section className="year-test panel">
+              <div className="year-test-head">
+                <div>
+                  <p className="eyebrow">Executable one-year proxy</p>
+                  <h2>What the current rule actually earned</h2>
+                  <p>
+                    Next-open entry, five-session hold, no overlapping trades, and 0.10% round-trip
+                    cost. This tests SPY shares—not options—because historical chains are not connected.
+                  </p>
+                </div>
+                <div className="capital-control" aria-label="Starting capital">
+                  <span>Starting capital</span>
+                  <div>
+                    {[10_000, 25_000, 50_000].map((amount) => (
+                      <button
+                        key={amount}
+                        className={startingCapital === amount ? "active" : ""}
+                        onClick={() => setStartingCapital(amount)}
+                      >
+                        ${(amount / 1_000).toFixed(0)}k
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="year-kpis">
+                <article>
+                  <span>Strategy return</span>
+                  <strong className="negative">{signed(YEAR_BACKTEST.currentReturn, 2)}</strong>
+                  <small>
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      maximumFractionDigits: 0,
+                    }).format(startingCapital * YEAR_BACKTEST.currentReturn / 100)}
+                  </small>
+                </article>
+                <article>
+                  <span>SPY price return</span>
+                  <strong className="positive">{signed(YEAR_BACKTEST.benchmark, 2)}</strong>
+                  <small>
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      maximumFractionDigits: 0,
+                    }).format(startingCapital * YEAR_BACKTEST.benchmark / 100)}
+                  </small>
+                </article>
+                <article>
+                  <span>Completed trades</span>
+                  <strong>{YEAR_BACKTEST.trades}</strong>
+                  <small>{YEAR_BACKTEST.winRate.toFixed(1)}% win rate</small>
+                </article>
+                <article>
+                  <span>Closed-trade drawdown</span>
+                  <strong className="negative">{signed(YEAR_BACKTEST.maxDrawdown, 2)}</strong>
+                  <small>{YEAR_BACKTEST.sessions} market sessions</small>
+                </article>
+              </div>
+
+              <div className="strategy-verdict">
+                <div className="verdict-label">
+                  <span>Strategy decision</span>
+                  <strong>DO NOT PROMOTE LIVE</strong>
+                </div>
+                <div className="verdict-copy">
+                  <h3>Change the hold test—not the entry filter.</h3>
+                  <p>
+                    The five-day version lost money and badly trailed passive SPY. A ten-session hold
+                    produced <b>{signed(YEAR_BACKTEST.candidateReturn, 2)}</b>, but only across
+                    {" "}{YEAR_BACKTEST.candidateTrades} trades. Keep the current entry definition,
+                    reject 2–3 day exits, and paper-test 10 days until at least 10 out-of-sample trades
+                    complete. No option trade should pass without real strike, IV, spread, and theta data.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="backtest-review-grid">
+              <article className="table-card panel">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">Sensitivity check</p>
+                    <h2>Same signal, different exits</h2>
+                  </div>
+                  <span>Net of 0.10% per round trip</span>
+                </div>
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr><th>Hold</th><th>Trades</th><th>Win rate</th><th>Return</th><th>Decision</th></tr>
+                    </thead>
+                    <tbody>
+                      {YEAR_BACKTEST.variants.map((variant) => (
+                        <tr key={variant.hold} className={variant.hold === 10 ? "candidate-row" : ""}>
+                          <td>{variant.hold} sessions</td>
+                          <td>{variant.trades}</td>
+                          <td>{variant.winRate.toFixed(1)}%</td>
+                          <td className={variant.result >= 0 ? "positive" : "negative"}>{signed(variant.result, 2)}</td>
+                          <td><span className={`verdict-chip ${variant.hold === 10 ? "candidate" : ""}`}>{variant.verdict}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <article className="table-card panel">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">Current five-day rule</p>
+                    <h2>Every completed trade</h2>
+                  </div>
+                  <span>{YEAR_BACKTEST.start} – {YEAR_BACKTEST.end}</span>
+                </div>
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr><th>Signal</th><th>3D move</th><th>Entry</th><th>Exit</th><th>Net result</th></tr>
+                    </thead>
+                    <tbody>
+                      {YEAR_BACKTEST.tradeLog.map((trade) => (
+                        <tr key={trade.signal}>
+                          <td>{trade.signal}</td>
+                          <td className="negative">{signed(trade.setup, 2)}</td>
+                          <td>{trade.entry}</td>
+                          <td>{trade.exit}</td>
+                          <td className={trade.result >= 0 ? "positive" : "negative"}>{signed(trade.result, 2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </section>
+
             <section className="table-card panel">
               <div className="section-heading">
                 <div>
@@ -678,10 +849,10 @@ export default function Home() {
             </section>
 
             <section className="method-strip">
-              <div><span>Source window</span><strong>Jan 1994 – Jul 2026</strong></div>
-              <div><span>Price series</span><strong>Adjusted SPY daily bars</strong></div>
-              <div><span>Events</span><strong>Overlapping observations</strong></div>
-              <div><span>Costs</span><strong>Not included</strong></div>
+              <div><span>Profit-test window</span><strong>Jul 24, 2025 – Jul 24, 2026</strong></div>
+              <div><span>Execution</span><strong>Next open → exit close</strong></div>
+              <div><span>Capital</span><strong>One position · no overlap</strong></div>
+              <div><span>Costs</span><strong>0.10% round trip</strong></div>
               <button onClick={() => setMethodologyOpen(true)}>Full methodology →</button>
             </section>
           </div>
@@ -716,6 +887,10 @@ export default function Home() {
               <div>
                 <strong>IV proxy</strong>
                 <p>Compares a simple forward realized-volatility measure with contemporaneous VIX. It is a rough diagnostic—not an options backtest or expected return.</p>
+              </div>
+              <div>
+                <strong>One-year profit proxy</strong>
+                <p>Uses unadjusted SPY daily OHLC bars from July 24, 2025 through July 24, 2026. A signal enters at the next open, exits at the selected closing horizon, prevents overlapping positions, and subtracts 0.10% round trip. Dividends, taxes, and market impact are excluded.</p>
               </div>
               <div>
                 <strong>Missing from v1</strong>
