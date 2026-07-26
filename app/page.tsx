@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type Tab = "signals" | "research" | "backtests";
+type Tab = "signals" | "research" | "backtests" | "data";
 type Horizon = 2 | 3 | 5 | 10 | 15;
 
 type HorizonStats = {
@@ -366,7 +366,7 @@ export default function Home() {
           <span>Momentum <b>Tail Scanner</b></span>
         </button>
         <nav className="primary-nav" aria-label="Primary navigation">
-          {(["signals", "research", "backtests"] as Tab[]).map((item) => (
+          {(["signals", "research", "backtests", "data"] as Tab[]).map((item) => (
             <button key={item} className={tab === item ? "active" : ""} onClick={() => setActiveTab(item)}>
               {item[0].toUpperCase() + item.slice(1)}
             </button>
@@ -389,47 +389,61 @@ export default function Home() {
       <main>
         <section className="page-intro">
           <div>
-            <p className="eyebrow">Event study · SPY daily bars since 1994</p>
-            <h1>{tab === "signals" ? "Signal cockpit" : tab === "research" ? "Pattern research" : "Backtest explorer"}</h1>
+            <p className="eyebrow">
+              {tab === "data" ? "Feed architecture · read-only first" : "Event study · SPY daily bars since 1994"}
+            </p>
+            <h1>
+              {tab === "signals"
+                ? "Signal cockpit"
+                : tab === "research"
+                  ? "Pattern research"
+                  : tab === "backtests"
+                    ? "Backtest explorer"
+                    : "Live data connection"}
+            </h1>
             <p className="intro-copy">
               {tab === "signals"
                 ? "Separate direction, move magnitude, and option cost before risking capital."
                 : tab === "research"
                   ? "See what short selloffs historically predicted—and what they did not."
-                  : "Interrogate every horizon, sample size, and recent analog behind the headline."}
+                  : tab === "backtests"
+                    ? "Interrogate every horizon, sample size, and recent analog behind the headline."
+                    : "Connect the underlying tape and the option chain without exposing credentials or enabling orders."}
             </p>
           </div>
           <div className="as-of">
-            <span className="live-dot" />
+            <span className={`live-dot ${tab === "data" ? "offline" : ""}`} />
             <div>
-              <small>Latest completed session</small>
-              <strong>Jul 24, 2026</strong>
+              <small>{tab === "data" ? "Connection status" : "Latest completed session"}</small>
+              <strong>{tab === "data" ? "Awaiting provider" : "Jul 24, 2026"}</strong>
             </div>
           </div>
         </section>
 
-        <section className="control-rack" aria-label="Backtest controls">
-          <label className="condition-control">
-            <span>Pattern</span>
-            <select aria-label="Pattern" value={conditionId} onChange={(event) => setConditionId(event.target.value)}>
-              {CONDITIONS.map((item) => <option key={item.id} value={item.id}>{item.menuLabel}</option>)}
-            </select>
-          </label>
-          <div className="horizon-control">
-            <span>Forward horizon</span>
-            <div className="horizon-pills">
-              {HORIZONS.map((days) => (
-                <button key={days} onClick={() => setHorizon(days)} className={horizon === days ? "active" : ""}>
-                  {days}D
-                </button>
-              ))}
+        {tab !== "data" && (
+          <section className="control-rack" aria-label="Backtest controls">
+            <label className="condition-control">
+              <span>Pattern</span>
+              <select aria-label="Pattern" value={conditionId} onChange={(event) => setConditionId(event.target.value)}>
+                {CONDITIONS.map((item) => <option key={item.id} value={item.id}>{item.menuLabel}</option>)}
+              </select>
+            </label>
+            <div className="horizon-control">
+              <span>Forward horizon</span>
+              <div className="horizon-pills">
+                {HORIZONS.map((days) => (
+                  <button key={days} onClick={() => setHorizon(days)} className={horizon === days ? "active" : ""}>
+                    {days}D
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="sample-pill">
-            <span>Sample</span>
-            <strong>{stats.n.toLocaleString()} observations</strong>
-          </div>
-        </section>
+            <div className="sample-pill">
+              <span>Sample</span>
+              <strong>{stats.n.toLocaleString()} observations</strong>
+            </div>
+          </section>
+        )}
 
         {tab === "signals" && (
           <div className="tab-panel">
@@ -854,6 +868,143 @@ export default function Home() {
               <div><span>Capital</span><strong>One position · no overlap</strong></div>
               <div><span>Costs</span><strong>0.10% round trip</strong></div>
               <button onClick={() => setMethodologyOpen(true)}>Full methodology →</button>
+            </section>
+          </div>
+        )}
+
+        {tab === "data" && (
+          <div className="tab-panel data-panel">
+            <section className="data-hero panel">
+              <div>
+                <p className="eyebrow">My recommendation</p>
+                <h2>Use Massive for pricing. Add Tradier later for execution.</h2>
+                <p>
+                  Massive is the cleanest fit for this research-heavy scanner because it provides
+                  live and historical stock and OPRA options data through REST, WebSockets, and flat
+                  files. Keep the first connection read-only. A broker connection should come only
+                  after the strategy survives a real options backtest and paper trading.
+                </p>
+                <div className="data-actions">
+                  <a href="https://massive.com/options" target="_blank" rel="noreferrer">Massive options plans ↗</a>
+                  <a href="https://massive.com/docs/options/getting-started" target="_blank" rel="noreferrer">API documentation ↗</a>
+                </div>
+              </div>
+              <aside className="answer-card">
+                <span>Do we need option prices?</span>
+                <strong>YES</strong>
+                <p>
+                  SPY prices can trigger a setup. They cannot tell us whether a call or put is
+                  overpriced, liquid, or profitable after spread and time decay.
+                </p>
+              </aside>
+            </section>
+
+            <section className="feed-grid">
+              <article className="feed-card panel">
+                <div className="feed-title">
+                  <span className="feed-number">01</span>
+                  <div>
+                    <p className="eyebrow">Underlying feed</p>
+                    <h2>Needed to detect the signal</h2>
+                  </div>
+                  <span className="required-chip">Required</span>
+                </div>
+                <ul className="field-list">
+                  <li><span>SPY</span><strong>Live bid, ask, last, volume and bars</strong></li>
+                  <li><span>Volatility</span><strong>VIX, VIX9D and VIX3M values</strong></li>
+                  <li><span>History</span><strong>Daily and intraday OHLCV</strong></li>
+                  <li><span>Integrity</span><strong>Exchange timestamp and stale-data flag</strong></li>
+                </ul>
+                <p className="feed-footnote">This layer can produce “setup active” or “no setup.” It should not produce an option trade.</p>
+              </article>
+
+              <article className="feed-card panel option-feed">
+                <div className="feed-title">
+                  <span className="feed-number">02</span>
+                  <div>
+                    <p className="eyebrow">Options feed</p>
+                    <h2>Needed to price the trade</h2>
+                  </div>
+                  <span className="required-chip coral">Non-negotiable</span>
+                </div>
+                <ul className="field-list">
+                  <li><span>Quote</span><strong>NBBO bid, ask, sizes and timestamp</strong></li>
+                  <li><span>Contract</span><strong>Strike, expiry, type and multiplier</strong></li>
+                  <li><span>Risk</span><strong>IV, delta, gamma, theta and vega</strong></li>
+                  <li><span>Liquidity</span><strong>Volume, open interest and spread</strong></li>
+                </ul>
+                <p className="feed-footnote">Historical versions of these fields are also required to replace the SPY-share proxy with a real options P&amp;L backtest.</p>
+              </article>
+            </section>
+
+            <section className="connection-card panel">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Secure connection</p>
+                  <h2>How the pricing reaches this dashboard</h2>
+                </div>
+                <span>API key stays server-side</span>
+              </div>
+              <ol className="connection-flow">
+                <li><span>1</span><div><strong>Market-data provider</strong><p>Massive REST for snapshots and history; WebSocket for live quotes.</p></div></li>
+                <li><span>2</span><div><strong>Private server route</strong><p>The hosted secret is never sent to the browser or committed in code.</p></div></li>
+                <li><span>3</span><div><strong>Strategy engine</strong><p>Normalize timestamps, reject stale quotes and calculate the four gates.</p></div></li>
+                <li><span>4</span><div><strong>Scanner display</strong><p>Show the selected contract, price, max loss and why it passed or failed.</p></div></li>
+              </ol>
+            </section>
+
+            <section className="provider-grid">
+              <article className="provider-card panel recommended">
+                <div className="provider-top">
+                  <span>Best for this app</span>
+                  <strong>Massive</strong>
+                </div>
+                <p>Best single data source for current quotes plus historical options research.</p>
+                <dl>
+                  <div><dt>Prototype</dt><dd>Delayed plans</dd></div>
+                  <div><dt>Live validation</dt><dd>Advanced real-time plan</dd></div>
+                  <div><dt>Historical quotes</dt><dd>OPRA data from Mar 2022</dd></div>
+                </dl>
+              </article>
+              <article className="provider-card panel">
+                <div className="provider-top">
+                  <span>Best low-cost live path</span>
+                  <strong>Tradier</strong>
+                </div>
+                <p>Real-time stocks and options for brokerage account holders, with chains and hourly Greeks.</p>
+                <dl>
+                  <div><dt>Strength</dt><dd>Live data + orders</dd></div>
+                  <div><dt>Use first</dt><dd>Paper trading only</dd></div>
+                  <div><dt>Limitation</dt><dd>Weaker history layer</dd></div>
+                </dl>
+                <a href="https://docs.tradier.com/docs/market-data" target="_blank" rel="noreferrer">Tradier market data ↗</a>
+              </article>
+              <article className="provider-card panel">
+                <div className="provider-top">
+                  <span>Good all-in-one alternative</span>
+                  <strong>Alpaca</strong>
+                </div>
+                <p>OPRA streaming plus paper trading, but its historical option data starts in February 2024.</p>
+                <dl>
+                  <div><dt>Strength</dt><dd>Data + paper account</dd></div>
+                  <div><dt>Live feed</dt><dd>WebSocket OPRA</dd></div>
+                  <div><dt>History</dt><dd>Since Feb 2024</dd></div>
+                </dl>
+                <a href="https://docs.alpaca.markets/us/docs/real-time-option-data" target="_blank" rel="noreferrer">Alpaca options feed ↗</a>
+              </article>
+            </section>
+
+            <section className="next-step panel">
+              <div>
+                <p className="eyebrow">What happens next</p>
+                <h2>Start delayed, prove the plumbing, then pay for real time.</h2>
+              </div>
+              <ol>
+                <li><span>01</span><p>Create a Massive account and choose a delayed options plan for integration testing.</p></li>
+                <li><span>02</span><p>Add the API key as a hosted secret—not in the page, repository, or chat.</p></li>
+                <li><span>03</span><p>Connect SPY snapshots and one filtered option chain, then verify timestamps and spreads.</p></li>
+                <li><span>04</span><p>Load historical option quotes, rerun the one-year backtest, and upgrade to real time only if the edge survives.</p></li>
+              </ol>
             </section>
           </div>
         )}
