@@ -25,3 +25,8 @@
 ## Working agreements
 - PR #2 (branch `claude/trader-app-gc085o`) is the active integration branch; keep it green and update it rather than opening parallel PRs.
 - This repo has no CI configured (as of 2026-08).
+
+## First real options backtest (free-tier ThetaData, 2023-06 -> 2026-08, long calls, 1 contract)
+- Hold 2s: 44 trades, 56.8% win, PF 1.82, +$3,724 | Hold 5s: 37 trades, 45.9% win, PF 1.30, +$2,437 (median -10% — IV crush is real; top-2 winners carry the whole result) | Hold 10s: 31 trades, 58.1% win, PF 1.56, +$4,778.
+- Structural read: long calls are net positive but fragile/tail-dependent, consistent with the VRP literature. Next engineering step: multi-leg support (call debit spreads, short put spreads) in backtester v1.1; next data step: $40-80 ThetaData month for 2016/2020+ regime variety.
+- Theta Terminal runs fine in the CCR container (Java 21, proxy OK, creds in scratchpad only — never commit).

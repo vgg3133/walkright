@@ -1,0 +1,23 @@
+{
+  "trades": 31,
+  "win_rate": 0.5806,
+  "total_pnl_usd": 4778.09,
+  "avg_return_on_premium": 0.2286,
+  "median_return_on_premium": 0.4734,
+  "profit_factor": 1.56,
+  "by_regime": {
+    "above_200dma/vix_low": {
+      "n": 27,
+      "total_pnl": 4125.67
+    },
+    "above_200dma/vix_high": {
+      "n": 4,
+      "total_pnl": 652.42
+    }
+  },
+  "rejections": {
+    "no_chain_for_entry_date": 285,
+    "position_open": 58,
+    "spread_too_wide": 1
+  }
+}
