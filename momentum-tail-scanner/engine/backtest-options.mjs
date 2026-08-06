@@ -37,7 +37,11 @@ export function loadChains(path) {
         bid: Number(row.bid),
         ask: Number(row.ask),
         volume: Number(row.volume || 0),
-        openInterest: Number(row.open_interest || 0),
+        // Empty/absent OI means the data source doesn't carry it (e.g. the
+        // ThetaData free-tier EOD report) — null skips the OI gate rather
+        // than rejecting every contract as illiquid.
+        openInterest: row.open_interest === undefined || row.open_interest === ""
+          ? null : Number(row.open_interest),
         delta: row.delta !== undefined && row.delta !== "" ? Number(row.delta) : null,
       };
       if (!byDate.has(quote.quoteDate)) byDate.set(quote.quoteDate, []);
@@ -84,7 +88,7 @@ export function selectContract(chainRows, { side, entryDate, holdSessions, spot,
   const spread = pick.ask - pick.bid;
   const maxSpread = Math.max(liq.max_spread_abs_usd, liq.max_spread_frac_of_mid * mid);
   if (spread > maxSpread) return { reject: "spread_too_wide", contract: pick };
-  if (pick.openInterest < liq.min_open_interest) return { reject: "open_interest_too_low", contract: pick };
+  if (pick.openInterest != null && pick.openInterest < liq.min_open_interest) return { reject: "open_interest_too_low", contract: pick };
   if (pick.volume < liq.min_volume) return { reject: "volume_too_low", contract: pick };
 
   return { contract: pick, selection: haveDelta ? "delta_target" : "nearest_atm" };
