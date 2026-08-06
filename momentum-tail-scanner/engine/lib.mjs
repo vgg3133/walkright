@@ -13,11 +13,15 @@ export function sha256(buffer) {
 
 export function parseCsv(text) {
   const lines = text.trim().split(/\r?\n/);
-  const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
+  const strip = (v) => {
+    const t = v.trim();
+    return t.startsWith('"') && t.endsWith('"') ? t.slice(1, -1) : t;
+  };
+  const header = lines[0].split(",").map((h) => strip(h).toLowerCase());
   return lines.slice(1).map((line) => {
     const values = line.split(",");
     const row = {};
-    header.forEach((key, i) => { row[key] = values[i]?.trim() ?? ""; });
+    header.forEach((key, i) => { row[key] = values[i] !== undefined ? strip(values[i]) : ""; });
     return row;
   });
 }
