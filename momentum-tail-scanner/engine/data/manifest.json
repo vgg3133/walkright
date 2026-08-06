@@ -1,0 +1,28 @@
+{
+  "datasets": {
+    "spy_daily.csv": {
+      "source_url": "https://query1.finance.yahoo.com/v8/finance/chart/SPY?period1=0&period2=9999999999&interval=1d&events=div%2Csplit",
+      "retrieved_at_utc": "2026-08-06T19:00:43.430Z",
+      "sha256": "d59eddd101ac43f46aeaf5a2522196bf30d2b1633a508f9aae6abbe59d6dbde2",
+      "rows": 8437,
+      "first_date": "1993-01-29",
+      "last_date": "2026-08-06"
+    },
+    "vix_daily.csv": {
+      "source_url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
+      "retrieved_at_utc": "2026-08-06T19:00:47.168Z",
+      "sha256": "77c11a13aa34dc3e70d49f1da50e4f6b480c49cb0b5330cae19a0da4b8480367",
+      "rows": 9244,
+      "first_date": "1990-01-02",
+      "last_date": "2026-08-05"
+    },
+    "vix3m_daily.csv": {
+      "source_url": "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv",
+      "retrieved_at_utc": "2026-08-06T19:00:47.438Z",
+      "sha256": "a0f301bf8dfc8ae6e6b4b9daa1afd931391c0de0bb61cf1ed7ecb75997f5c223",
+      "rows": 4245,
+      "first_date": "2009-09-18",
+      "last_date": "2026-08-05"
+    }
+  }
+}

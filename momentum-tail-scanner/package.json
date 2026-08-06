@@ -14,6 +14,10 @@
     "validate:artifact": "bash scripts/validate-artifact.sh",
     "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
     "backtest": "node scripts/analyze-backtest.mjs",
+    "engine:fetch": "node engine/fetch-data.mjs",
+    "engine:signals": "node engine/signals.mjs",
+    "engine:backtest": "node engine/backtest-options.mjs",
+    "engine:test": "node --test engine/test.mjs",
     "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate"
   },
   "dependencies": {

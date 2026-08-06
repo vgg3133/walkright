@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "frozen_at": "2026-08-06",
+  "notes": "Every rule required by ENGINEERING_HANDOFF.md section 6 is made explicit here. Change rules only by bumping the version and recording the reason in CHANGELOG below.",
+  "signal": {
+    "evaluated_at": "session_close",
+    "price_series_for_returns": "adjusted_close",
+    "price_series_for_levels": "raw_close",
+    "conditions": {
+      "spy_3_session_return_max": -0.01,
+      "spy_close_above_sma_sessions": 200,
+      "vix_3_session_return_min": 0.05,
+      "vix_term_structure": "vix_close_below_vix3m_close"
+    }
+  },
+  "event_study": {
+    "horizons_sessions": [2, 3, 5, 10, 15],
+    "touch_threshold": 0.03,
+    "touch_basis": "raw_high_low_vs_raw_signal_close"
+  },
+  "options": {
+    "side": "call",
+    "entry_at": "next_session_close",
+    "expiration": {
+      "min_calendar_dte_beyond_hold": 5,
+      "max_calendar_dte_beyond_hold": 30,
+      "pick": "nearest_expiration_within_window"
+    },
+    "strike": {
+      "method": "delta_target_if_available_else_nearest_atm",
+      "delta_target": 0.5,
+      "atm_reference": "spy_raw_close_on_entry_date",
+      "tie_break": "lower_strike"
+    },
+    "liquidity": {
+      "min_bid": 0.01,
+      "max_spread_abs_usd": 0.1,
+      "max_spread_frac_of_mid": 0.05,
+      "spread_rule": "pass_if_spread_lte_max(abs, frac_of_mid)",
+      "min_open_interest": 100,
+      "min_volume": 0
+    },
+    "fill": {
+      "model": "midpoint_plus_slippage_toward_touch",
+      "slippage_frac_of_half_spread": 0.25,
+      "fee_per_contract_per_side_usd": 0.65,
+      "contract_multiplier": 100
+    },
+    "exit": {
+      "rule": "time_exit_only",
+      "hold_sessions": 5,
+      "exit_at": "session_close"
+    },
+    "overlapping_signals": "blocked_while_position_open",
+    "sizing": { "contracts": 1 },
+    "calendar": {
+      "early_closes": "count_as_normal_session",
+      "contract_expiring_before_exit": "reject_contract",
+      "missing_exit_quote": "reject_trade_and_report"
+    }
+  },
+  "CHANGELOG": [
+    { "version": "1.0.0", "date": "2026-08-06", "change": "Initial frozen specification. Entry at next session close (not next open) because the validated data layer is EOD NBBO; an open-fill model would require intraday quotes we have not purchased." }
+  ]
+}
