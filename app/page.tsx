@@ -324,7 +324,6 @@ export default function Home() {
   const [horizon, setHorizon] = useState<Horizon>(5);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
   const [callWeight, setCallWeight] = useState(70);
-  const [startingCapital, setStartingCapital] = useState(10_000);
 
   const condition = CONDITIONS.find((item) => item.id === conditionId) ?? CONDITIONS[0];
   const stats = condition.stats[horizon];
@@ -412,10 +411,10 @@ export default function Home() {
             </p>
           </div>
           <div className="as-of">
-            <span className={`live-dot ${tab === "data" ? "offline" : ""}`} />
+            <span className="live-dot offline" />
             <div>
-              <small>{tab === "data" ? "Connection status" : "Latest completed session"}</small>
-              <strong>{tab === "data" ? "Awaiting provider" : "Jul 24, 2026"}</strong>
+              <small>{tab === "data" ? "Connection status" : "Market data status"}</small>
+              <strong>{tab === "data" ? "Awaiting provider" : "STALE · Jul 24, 2026"}</strong>
             </div>
           </div>
         </section>
@@ -483,7 +482,7 @@ export default function Home() {
                     <h2>Regime inputs</h2>
                   </div>
                   <span className={`status-chip ${setupIsLive ? "" : "inactive"}`}>
-                    {setupIsLive ? "Live match" : "Study only"}
+                    {setupIsLive ? "Stored match" : "Study only"}
                   </span>
                 </div>
                 <div className="snapshot-list">
@@ -521,6 +520,36 @@ export default function Home() {
               <MetricCard label="+3% touch" value={`${stats.upTouch.toFixed(1)}%`} note="Intraperiod upside threshold" />
               <MetricCard label="−3% touch" value={`${stats.downTouch.toFixed(1)}%`} note="Intraperiod downside threshold" tone="coral" />
               <MetricCard label="IV proxy edge" value={signed(stats.volEdge)} note="Realized-vol proxy vs current VIX" tone="coral" />
+            </section>
+
+            <section className="execution-grid" aria-label="Executable trade details">
+              <article className="trade-ticket panel">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">Candidate trade</p>
+                    <h2>No executable contract</h2>
+                  </div>
+                  <span className="blocked-chip">Blocked · stale feed</span>
+                </div>
+                <div className="ticket-fields">
+                  <div><span>Direction</span><strong>{decision.label.includes("CALL") ? "Bullish call" : decision.label.includes("PUT") ? "Bearish put" : "No side selected"}</strong></div>
+                  <div><span>Strike / expiration</span><strong>Awaiting option chain</strong></div>
+                  <div><span>Entry price</span><strong>NBBO unavailable</strong></div>
+                  <div><span>Maximum loss</span><strong>Unavailable</strong></div>
+                  <div><span>Expected risk / reward</span><strong>Cannot calculate</strong></div>
+                  <div><span>Confidence</span><strong className="negative">Insufficient evidence</strong></div>
+                </div>
+              </article>
+
+              <aside className="evidence-card panel">
+                <p className="eyebrow">Execution evidence</p>
+                <h2>Why this is blocked</h2>
+                <ul>
+                  <li><i className="evidence-ok">✓</i><div><strong>Pattern logic</strong><span>Historical rule is defined and reproducible.</span></div></li>
+                  <li><i>×</i><div><strong>Fresh underlying data</strong><span>The latest stored session is no longer current.</span></div></li>
+                  <li><i>×</i><div><strong>Option economics</strong><span>No bid, ask, IV, Greeks, spread, or liquidity data.</span></div></li>
+                </ul>
+              </aside>
             </section>
 
             <section className="lower-grid">
@@ -632,61 +661,41 @@ export default function Home() {
             <section className="year-test panel">
               <div className="year-test-head">
                 <div>
-                  <p className="eyebrow">Executable one-year proxy</p>
-                  <h2>What the current rule actually earned</h2>
+                  <p className="eyebrow">One-year validation gate</p>
+                  <h2>Profitability is not yet measurable</h2>
                   <p>
-                    Next-open entry, five-session hold, no overlapping trades, and 0.10% round-trip
-                    cost. This tests SPY shares—not options—because historical chains are not connected.
+                    The stored SPY history identified three possible entries, but that is not an options
+                    backtest. Until historical bid/ask quotes, Greeks, spreads, slippage, and fees are loaded,
+                    the scanner will not display a profit estimate or optimize the strategy.
                   </p>
                 </div>
-                <div className="capital-control" aria-label="Starting capital">
-                  <span>Starting capital</span>
-                  <div>
-                    {[10_000, 25_000, 50_000].map((amount) => (
-                      <button
-                        key={amount}
-                        className={startingCapital === amount ? "active" : ""}
-                        onClick={() => setStartingCapital(amount)}
-                      >
-                        ${(amount / 1_000).toFixed(0)}k
-                      </button>
-                    ))}
-                  </div>
+                <div className="validation-stamp" aria-label="Backtest status">
+                  <span>Backtest status</span>
+                  <strong>BLOCKED</strong>
+                  <small>Historical option chain required</small>
                 </div>
               </div>
 
               <div className="year-kpis">
                 <article>
-                  <span>Strategy return</span>
-                  <strong className="negative">{signed(YEAR_BACKTEST.currentReturn, 2)}</strong>
-                  <small>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                      maximumFractionDigits: 0,
-                    }).format(startingCapital * YEAR_BACKTEST.currentReturn / 100)}
-                  </small>
+                  <span>Option P&amp;L</span>
+                  <strong className="muted-value">NOT AVAILABLE</strong>
+                  <small>No substitute calculation shown</small>
                 </article>
                 <article>
-                  <span>SPY price return</span>
-                  <strong className="positive">{signed(YEAR_BACKTEST.benchmark, 2)}</strong>
-                  <small>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                      maximumFractionDigits: 0,
-                    }).format(startingCapital * YEAR_BACKTEST.benchmark / 100)}
-                  </small>
+                  <span>Historical option quotes</span>
+                  <strong className="muted-value">NOT CONNECTED</strong>
+                  <small>Bid / ask history is required</small>
                 </article>
                 <article>
-                  <span>Completed trades</span>
+                  <span>Potential entries</span>
                   <strong>{YEAR_BACKTEST.trades}</strong>
-                  <small>{YEAR_BACKTEST.winRate.toFixed(1)}% win rate</small>
+                  <small>Signals only · not completed trades</small>
                 </article>
                 <article>
-                  <span>Closed-trade drawdown</span>
-                  <strong className="negative">{signed(YEAR_BACKTEST.maxDrawdown, 2)}</strong>
-                  <small>{YEAR_BACKTEST.sessions} market sessions</small>
+                  <span>Strategy decision</span>
+                  <strong className="negative">NO GO</strong>
+                  <small>{YEAR_BACKTEST.sessions} sessions reviewed</small>
                 </article>
               </div>
 
@@ -696,16 +705,41 @@ export default function Home() {
                   <strong>DO NOT PROMOTE LIVE</strong>
                 </div>
                 <div className="verdict-copy">
-                  <h3>Change the hold test—not the entry filter.</h3>
+                  <h3>Do not adjust the rule from SPY-only results.</h3>
                   <p>
-                    The five-day version lost money and badly trailed passive SPY. A ten-session hold
-                    produced <b>{signed(YEAR_BACKTEST.candidateReturn, 2)}</b>, but only across
-                    {" "}{YEAR_BACKTEST.candidateTrades} trades. Keep the current entry definition,
-                    reject 2–3 day exits, and paper-test 10 days until at least 10 out-of-sample trades
-                    complete. No option trade should pass without real strike, IV, spread, and theta data.
+                    A ten-session SPY path looked better than shorter exits, but it came from only two
+                    qualifying signals and says nothing about option premium, volatility crush, theta, or
+                    execution cost. Freeze the entry rules, load historical option quotes, and require at
+                    least 30 completed trades across multiple regimes before promoting any change.
                   </p>
                 </div>
               </div>
+            </section>
+
+            <section className="validation-grid">
+              <article className="panel validation-card">
+                <div className="section-heading">
+                  <div><p className="eyebrow">Test sequence</p><h2>Build the evidence in order</h2></div>
+                  <span>No skipped gates</span>
+                </div>
+                <ol>
+                  <li className="complete"><span>01</span><div><strong>Signal definition</strong><p>Entry conditions and timestamps are reproducible.</p></div><b>Complete</b></li>
+                  <li><span>02</span><div><strong>Historical contract selection</strong><p>Select the strike and expiry using information available at that time.</p></div><b>Blocked</b></li>
+                  <li><span>03</span><div><strong>Executable option P&amp;L</strong><p>Use bid/ask fills, slippage, fees, and contract multiplier.</p></div><b>Blocked</b></li>
+                  <li><span>04</span><div><strong>Out-of-sample paper test</strong><p>Promote only after the historical edge survives live observation.</p></div><b>Waiting</b></li>
+                </ol>
+              </article>
+              <article className="panel regime-card">
+                <div className="section-heading">
+                  <div><p className="eyebrow">Stability requirement</p><h2>Results by market regime</h2></div>
+                </div>
+                <div className="regime-matrix">
+                  <div><span>Bull market</span><strong>Not tested</strong><i /></div>
+                  <div><span>Bear market</span><strong>Not tested</strong><i /></div>
+                  <div><span>High volatility</span><strong>Not tested</strong><i /></div>
+                </div>
+                <p>No blended headline is allowed until each regime contains enough completed option trades.</p>
+              </article>
             </section>
 
             <section className="backtest-review-grid">
@@ -715,21 +749,21 @@ export default function Home() {
                     <p className="eyebrow">Sensitivity check</p>
                     <h2>Same signal, different exits</h2>
                   </div>
-                  <span>Net of 0.10% per round trip</span>
+                  <span>Option costs pending</span>
                 </div>
                 <div className="table-scroll">
                   <table>
                     <thead>
-                      <tr><th>Hold</th><th>Trades</th><th>Win rate</th><th>Return</th><th>Decision</th></tr>
+                      <tr><th>Hold</th><th>Eligible signals</th><th>Option P&amp;L</th><th>Evidence</th><th>Decision</th></tr>
                     </thead>
                     <tbody>
                       {YEAR_BACKTEST.variants.map((variant) => (
                         <tr key={variant.hold} className={variant.hold === 10 ? "candidate-row" : ""}>
                           <td>{variant.hold} sessions</td>
                           <td>{variant.trades}</td>
-                          <td>{variant.winRate.toFixed(1)}%</td>
-                          <td className={variant.result >= 0 ? "positive" : "negative"}>{signed(variant.result, 2)}</td>
-                          <td><span className={`verdict-chip ${variant.hold === 10 ? "candidate" : ""}`}>{variant.verdict}</span></td>
+                          <td className="muted-value">Not calculated</td>
+                          <td>SPY path only</td>
+                          <td><span className="verdict-chip">Blocked</span></td>
                         </tr>
                       ))}
                     </tbody>
@@ -741,14 +775,14 @@ export default function Home() {
                 <div className="section-heading">
                   <div>
                     <p className="eyebrow">Current five-day rule</p>
-                    <h2>Every completed trade</h2>
+                    <h2>Potential signal dates</h2>
                   </div>
                   <span>{YEAR_BACKTEST.start} – {YEAR_BACKTEST.end}</span>
                 </div>
                 <div className="table-scroll">
                   <table>
                     <thead>
-                      <tr><th>Signal</th><th>3D move</th><th>Entry</th><th>Exit</th><th>Net result</th></tr>
+                      <tr><th>Signal</th><th>3D move</th><th>Entry window</th><th>Exit window</th><th>Option result</th></tr>
                     </thead>
                     <tbody>
                       {YEAR_BACKTEST.tradeLog.map((trade) => (
@@ -757,7 +791,7 @@ export default function Home() {
                           <td className="negative">{signed(trade.setup, 2)}</td>
                           <td>{trade.entry}</td>
                           <td>{trade.exit}</td>
-                          <td className={trade.result >= 0 ? "positive" : "negative"}>{signed(trade.result, 2)}</td>
+                          <td className="muted-value">Not calculated</td>
                         </tr>
                       ))}
                     </tbody>
@@ -785,7 +819,7 @@ export default function Home() {
                       <th>±3% touch</th>
                       <th>+3% touch</th>
                       <th>−3% touch</th>
-                      <th>Avg return</th>
+                      <th>Avg SPY move</th>
                       <th>IV proxy</th>
                     </tr>
                   </thead>
@@ -823,7 +857,7 @@ export default function Home() {
                 </div>
                 <div className="table-scroll">
                   <table className="analog-table">
-                    <thead><tr><th>Signal date</th><th>3D setup</th><th>Next 5D</th><th>Next 10D</th></tr></thead>
+                    <thead><tr><th>Signal date</th><th>3D setup</th><th>SPY next 5D</th><th>SPY next 10D</th></tr></thead>
                     <tbody>
                       {ANALOGS.map((row) => (
                         <tr key={row.date}>
@@ -863,10 +897,10 @@ export default function Home() {
             </section>
 
             <section className="method-strip">
-              <div><span>Profit-test window</span><strong>Jul 24, 2025 – Jul 24, 2026</strong></div>
-              <div><span>Execution</span><strong>Next open → exit close</strong></div>
+              <div><span>Signal-review window</span><strong>Jul 24, 2025 – Jul 24, 2026</strong></div>
+              <div><span>Planned execution</span><strong>Historical NBBO fills</strong></div>
               <div><span>Capital</span><strong>One position · no overlap</strong></div>
-              <div><span>Costs</span><strong>0.10% round trip</strong></div>
+              <div><span>Required costs</span><strong>Spread + slippage + fees</strong></div>
               <button onClick={() => setMethodologyOpen(true)}>Full methodology →</button>
             </section>
           </div>
@@ -1040,8 +1074,8 @@ export default function Home() {
                 <p>Compares a simple forward realized-volatility measure with contemporaneous VIX. It is a rough diagnostic—not an options backtest or expected return.</p>
               </div>
               <div>
-                <strong>One-year profit proxy</strong>
-                <p>Uses unadjusted SPY daily OHLC bars from July 24, 2025 through July 24, 2026. A signal enters at the next open, exits at the selected closing horizon, prevents overlapping positions, and subtracts 0.10% round trip. Dividends, taxes, and market impact are excluded.</p>
+                <strong>One-year signal review</strong>
+                <p>Uses SPY daily bars from July 24, 2025 through July 24, 2026 only to locate potential entry dates. It does not estimate option profit. Profitability stays blocked until historical contracts and executable quotes are connected.</p>
               </div>
               <div>
                 <strong>Missing from v1</strong>
