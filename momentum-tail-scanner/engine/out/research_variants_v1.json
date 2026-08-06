@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T19:11:05.930Z",
+  "generated_at_utc": "2026-08-06T19:15:08.581Z",
   "variants": {
     "entry_basis": {
       "question": "How much of the edge survives entering at the next open / next close instead of the signal close?",
@@ -212,6 +212,91 @@
           "avg": 0.0036,
           "median": 0.0041,
           "avg_hold_sessions": 2.6
+        }
+      }
+    },
+    "literature_guards": {
+      "question": "Literature-suggested refinements: IBS<0.2 oversold filter (Pagonidis); trend-transition guards (rising 200DMA, or >=2% above it) instead of relying on the contango leg for bear protection.",
+      "results": {
+        "gate_all": {
+          "2s": {
+            "n": 375,
+            "up_rate": 0.6027,
+            "avg": 0.0019,
+            "median": 0.0028
+          },
+          "5s": {
+            "n": 375,
+            "up_rate": 0.6347,
+            "avg": 0.0054,
+            "median": 0.0076
+          },
+          "10s": {
+            "n": 372,
+            "up_rate": 0.6532,
+            "avg": 0.0089,
+            "median": 0.0135
+          }
+        },
+        "gate_ibs_lt_02": {
+          "2s": {
+            "n": 146,
+            "up_rate": 0.6301,
+            "avg": 0.0028,
+            "median": 0.0033
+          },
+          "5s": {
+            "n": 146,
+            "up_rate": 0.637,
+            "avg": 0.006,
+            "median": 0.0086
+          },
+          "10s": {
+            "n": 145,
+            "up_rate": 0.6207,
+            "avg": 0.0076,
+            "median": 0.0107
+          }
+        },
+        "gate_sma200_rising": {
+          "2s": {
+            "n": 368,
+            "up_rate": 0.6033,
+            "avg": 0.0019,
+            "median": 0.0028
+          },
+          "5s": {
+            "n": 368,
+            "up_rate": 0.6386,
+            "avg": 0.0055,
+            "median": 0.0077
+          },
+          "10s": {
+            "n": 365,
+            "up_rate": 0.6575,
+            "avg": 0.0092,
+            "median": 0.0139
+          }
+        },
+        "gate_2pct_above_sma": {
+          "2s": {
+            "n": 330,
+            "up_rate": 0.6061,
+            "avg": 0.0018,
+            "median": 0.0027
+          },
+          "5s": {
+            "n": 330,
+            "up_rate": 0.6364,
+            "avg": 0.0052,
+            "median": 0.0075
+          },
+          "10s": {
+            "n": 327,
+            "up_rate": 0.6269,
+            "avg": 0.0075,
+            "median": 0.012
+          }
         }
       }
     }

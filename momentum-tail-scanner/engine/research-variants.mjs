@@ -152,6 +152,38 @@ const gate = detectCohort(enriched, "full_gate", strategy);
   };
 }
 
+// ── E. Literature-suggested guards (IBS entry filter, trend-transition) ───
+{
+  // IBS = (close - low) / (high - low) on the signal day (Pagonidis/NAAIM).
+  function ibs(row) {
+    const range = row.high - row.low;
+    return range > 0 ? (row.close - row.low) / range : 0.5;
+  }
+  // 200DMA slope proxy: SMA today vs 20 sessions ago.
+  function smaRising(row) {
+    if (row.index < 20) return false;
+    const prior = smaAt(adj, row.index - 20, 200);
+    return prior != null && row.sma != null && row.sma >= prior;
+  }
+  const out = {};
+  for (const [label, testFn] of Object.entries({
+    gate_all: () => true,
+    gate_ibs_lt_02: (row) => ibs(row) < 0.2,
+    gate_sma200_rising: (row) => smaRising(row),
+    gate_2pct_above_sma: (row) => row.adjClose >= row.sma * 1.02,
+  })) {
+    const rows = gate.filter(testFn);
+    out[label] = {};
+    for (const h of [2, 5, 10]) {
+      out[label][`${h}s`] = stats(rows.map((row) => fwdFromNextClose(row, h)).filter((v) => v != null));
+    }
+  }
+  report.variants.literature_guards = {
+    question: "Literature-suggested refinements: IBS<0.2 oversold filter (Pagonidis); trend-transition guards (rising 200DMA, or >=2% above it) instead of relying on the contango leg for bear protection.",
+    results: out,
+  };
+}
+
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(join(OUT_DIR, "research_variants_v1.json"), JSON.stringify(report, null, 2) + "\n");
 console.log("Written: engine/out/research_variants_v1.json\n");
