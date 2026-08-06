@@ -1,0 +1,111 @@
+{
+  "generated_at_utc": "2026-08-06T22:19:22.824Z",
+  "strategy_version": "1.0.0",
+  "results": {
+    "long_call": {
+      "2s": {
+        "trades": 44,
+        "win_rate": 0.5682,
+        "total_pnl_usd": 3723.72,
+        "profit_factor": 1.82,
+        "avg_return_on_risk": 0.1558,
+        "median_return_on_risk": 0.0363,
+        "worst_trade_usd": -549.55,
+        "total_minus_top2_usd": 1485.7,
+        "avg_risk_usd": 519.14
+      },
+      "5s": {
+        "trades": 37,
+        "win_rate": 0.4595,
+        "total_pnl_usd": 2437.1,
+        "profit_factor": 1.3,
+        "avg_return_on_risk": 0.0608,
+        "median_return_on_risk": -0.102,
+        "worst_trade_usd": -779.67,
+        "total_minus_top2_usd": -1235.05,
+        "avg_risk_usd": 610.49
+      },
+      "10s": {
+        "trades": 31,
+        "win_rate": 0.5806,
+        "total_pnl_usd": 4778.09,
+        "profit_factor": 1.56,
+        "avg_return_on_risk": 0.2286,
+        "median_return_on_risk": 0.4734,
+        "worst_trade_usd": -1084.05,
+        "total_minus_top2_usd": 2079.19,
+        "avg_risk_usd": 841.16
+      }
+    },
+    "call_debit_spread": {
+      "2s": {
+        "trades": 44,
+        "win_rate": 0.5909,
+        "total_pnl_usd": 2664.01,
+        "profit_factor": 1.75,
+        "avg_return_on_risk": 0.1464,
+        "median_return_on_risk": 0.0782,
+        "worst_trade_usd": -433.72,
+        "total_minus_top2_usd": 1623.34,
+        "avg_risk_usd": 441.84
+      },
+      "5s": {
+        "trades": 37,
+        "win_rate": 0.5135,
+        "total_pnl_usd": 874.62,
+        "profit_factor": 1.14,
+        "avg_return_on_risk": 0.031,
+        "median_return_on_risk": 0.0779,
+        "worst_trade_usd": -544.6,
+        "total_minus_top2_usd": -459.43,
+        "avg_risk_usd": 482.44
+      },
+      "10s": {
+        "trades": 31,
+        "win_rate": 0.5806,
+        "total_pnl_usd": 3596.9,
+        "profit_factor": 1.72,
+        "avg_return_on_risk": 0.2266,
+        "median_return_on_risk": 0.61,
+        "worst_trade_usd": -673.47,
+        "total_minus_top2_usd": 2229.36,
+        "avg_risk_usd": 566.21
+      }
+    },
+    "put_credit_spread": {
+      "2s": {
+        "trades": 44,
+        "win_rate": 0.7955,
+        "total_pnl_usd": 1118.73,
+        "profit_factor": 1.55,
+        "avg_return_on_risk": 0.012,
+        "median_return_on_risk": 0.0255,
+        "worst_trade_usd": -453.35,
+        "total_minus_top2_usd": 568.93,
+        "avg_risk_usd": 2206.5
+      },
+      "5s": {
+        "trades": 38,
+        "win_rate": 0.8421,
+        "total_pnl_usd": 3427.38,
+        "profit_factor": 3.83,
+        "avg_return_on_risk": 0.0406,
+        "median_return_on_risk": 0.0605,
+        "worst_trade_usd": -350.22,
+        "total_minus_top2_usd": 2743.58,
+        "avg_risk_usd": 2141.89
+      },
+      "10s": {
+        "trades": 31,
+        "win_rate": 0.7742,
+        "total_pnl_usd": -265.55,
+        "profit_factor": 0.95,
+        "avg_return_on_risk": -0.0023,
+        "median_return_on_risk": 0.0924,
+        "worst_trade_usd": -1800.98,
+        "total_minus_top2_usd": -932.11,
+        "avg_risk_usd": 2082.79
+      }
+    }
+  }
+}
