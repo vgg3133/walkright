@@ -1,0 +1,389 @@
+{
+  "generated_at_utc": "2026-08-08T17:31:24.709Z",
+  "variants": {
+    "entry_basis": {
+      "question": "How much of the edge survives entering at the next open / next close instead of the signal close?",
+      "results": {
+        "signal_close": {
+          "2s": {
+            "n": 375,
+            "up_rate": 0.576,
+            "avg": 0.0019,
+            "median": 0.0025
+          },
+          "5s": {
+            "n": 375,
+            "up_rate": 0.648,
+            "avg": 0.0058,
+            "median": 0.0071
+          },
+          "10s": {
+            "n": 372,
+            "up_rate": 0.6505,
+            "avg": 0.0093,
+            "median": 0.0148
+          }
+        },
+        "next_open": {
+          "2s": {
+            "n": 375,
+            "up_rate": 0.5813,
+            "avg": 0.002,
+            "median": 0.0032
+          },
+          "5s": {
+            "n": 375,
+            "up_rate": 0.6053,
+            "avg": 0.0052,
+            "median": 0.0061
+          },
+          "10s": {
+            "n": 372,
+            "up_rate": 0.6747,
+            "avg": 0.0084,
+            "median": 0.0127
+          }
+        },
+        "next_close": {
+          "2s": {
+            "n": 375,
+            "up_rate": 0.6027,
+            "avg": 0.0019,
+            "median": 0.0028
+          },
+          "5s": {
+            "n": 375,
+            "up_rate": 0.6347,
+            "avg": 0.0054,
+            "median": 0.0076
+          },
+          "10s": {
+            "n": 372,
+            "up_rate": 0.6532,
+            "avg": 0.0089,
+            "median": 0.0135
+          }
+        }
+      }
+    },
+    "rsi2_refinement": {
+      "question": "Does a Connors-style RSI(2) oversold filter concentrate the edge? (next-close entry basis)",
+      "results": {
+        "gate_all": {
+          "2s": {
+            "n": 375,
+            "up_rate": 0.6027,
+            "avg": 0.0019,
+            "median": 0.0028
+          },
+          "5s": {
+            "n": 375,
+            "up_rate": 0.6347,
+            "avg": 0.0054,
+            "median": 0.0076
+          },
+          "10s": {
+            "n": 372,
+            "up_rate": 0.6532,
+            "avg": 0.0089,
+            "median": 0.0135
+          }
+        },
+        "gate_rsi2_lt_25": {
+          "2s": {
+            "n": 300,
+            "up_rate": 0.59,
+            "avg": 0.0014,
+            "median": 0.0024
+          },
+          "5s": {
+            "n": 300,
+            "up_rate": 0.62,
+            "avg": 0.0047,
+            "median": 0.0069
+          },
+          "10s": {
+            "n": 298,
+            "up_rate": 0.6342,
+            "avg": 0.0075,
+            "median": 0.0124
+          }
+        },
+        "gate_rsi2_lt_10": {
+          "2s": {
+            "n": 167,
+            "up_rate": 0.5868,
+            "avg": 0.0013,
+            "median": 0.0027
+          },
+          "5s": {
+            "n": 167,
+            "up_rate": 0.5808,
+            "avg": 0.0031,
+            "median": 0.0046
+          },
+          "10s": {
+            "n": 166,
+            "up_rate": 0.5723,
+            "avg": 0.0043,
+            "median": 0.0067
+          }
+        }
+      }
+    },
+    "contango_value": {
+      "question": "Does requiring VIX<VIX3M (condition 4) actually help?",
+      "results": {
+        "with_contango_v1": {
+          "2s": {
+            "n": 375,
+            "up_rate": 0.6027,
+            "avg": 0.0019,
+            "median": 0.0028
+          },
+          "5s": {
+            "n": 375,
+            "up_rate": 0.6347,
+            "avg": 0.0054,
+            "median": 0.0076
+          },
+          "10s": {
+            "n": 372,
+            "up_rate": 0.6532,
+            "avg": 0.0089,
+            "median": 0.0135
+          }
+        },
+        "without_term_filter": {
+          "2s": {
+            "n": 471,
+            "up_rate": 0.6093,
+            "avg": 0.0024,
+            "median": 0.0031
+          },
+          "5s": {
+            "n": 471,
+            "up_rate": 0.6454,
+            "avg": 0.0063,
+            "median": 0.0084
+          },
+          "10s": {
+            "n": 468,
+            "up_rate": 0.6581,
+            "avg": 0.0096,
+            "median": 0.0147
+          }
+        },
+        "backwardation_only": {
+          "2s": {
+            "n": 96,
+            "up_rate": 0.6354,
+            "avg": 0.004,
+            "median": 0.0077
+          },
+          "5s": {
+            "n": 96,
+            "up_rate": 0.6875,
+            "avg": 0.0101,
+            "median": 0.0163
+          },
+          "10s": {
+            "n": 96,
+            "up_rate": 0.6771,
+            "avg": 0.0124,
+            "median": 0.0211
+          }
+        }
+      }
+    },
+    "exit_style": {
+      "question": "Fixed 5-session hold vs Connors-style exit on first close above the 5-session SMA (capped at 10 sessions)? Non-overlapping trades, next-close entry.",
+      "results": {
+        "time_exit_5s": {
+          "n": 170,
+          "up_rate": 0.5882,
+          "avg": 0.0032,
+          "median": 0.006,
+          "avg_hold_sessions": 5
+        },
+        "first_close_above_sma5_cap10": {
+          "n": 177,
+          "up_rate": 0.7006,
+          "avg": 0.0036,
+          "median": 0.0041,
+          "avg_hold_sessions": 2.6
+        }
+      }
+    },
+    "literature_guards": {
+      "question": "Literature-suggested refinements: IBS<0.2 oversold filter (Pagonidis); trend-transition guards (rising 200DMA, or >=2% above it) instead of relying on the contango leg for bear protection.",
+      "results": {
+        "gate_all": {
+          "2s": {
+            "n": 375,
+            "up_rate": 0.6027,
+            "avg": 0.0019,
+            "median": 0.0028
+          },
+          "5s": {
+            "n": 375,
+            "up_rate": 0.6347,
+            "avg": 0.0054,
+            "median": 0.0076
+          },
+          "10s": {
+            "n": 372,
+            "up_rate": 0.6532,
+            "avg": 0.0089,
+            "median": 0.0135
+          }
+        },
+        "gate_ibs_lt_02": {
+          "2s": {
+            "n": 146,
+            "up_rate": 0.6301,
+            "avg": 0.0028,
+            "median": 0.0033
+          },
+          "5s": {
+            "n": 146,
+            "up_rate": 0.637,
+            "avg": 0.006,
+            "median": 0.0086
+          },
+          "10s": {
+            "n": 145,
+            "up_rate": 0.6207,
+            "avg": 0.0076,
+            "median": 0.0107
+          }
+        },
+        "gate_sma200_rising": {
+          "2s": {
+            "n": 368,
+            "up_rate": 0.6033,
+            "avg": 0.0019,
+            "median": 0.0028
+          },
+          "5s": {
+            "n": 368,
+            "up_rate": 0.6386,
+            "avg": 0.0055,
+            "median": 0.0077
+          },
+          "10s": {
+            "n": 365,
+            "up_rate": 0.6575,
+            "avg": 0.0092,
+            "median": 0.0139
+          }
+        },
+        "gate_2pct_above_sma": {
+          "2s": {
+            "n": 330,
+            "up_rate": 0.6061,
+            "avg": 0.0018,
+            "median": 0.0027
+          },
+          "5s": {
+            "n": 330,
+            "up_rate": 0.6364,
+            "avg": 0.0052,
+            "median": 0.0075
+          },
+          "10s": {
+            "n": 327,
+            "up_rate": 0.6269,
+            "avg": 0.0075,
+            "median": 0.012
+          }
+        }
+      }
+    },
+    "liquidity_sweep": {
+      "question": "ICT-style daily liquidity sweep: does breaking the prior 5-session low (with or without an upper-half close 'reclaim') concentrate the gate's edge?",
+      "results": {
+        "gate_all": {
+          "2s": {
+            "n": 375,
+            "up_rate": 0.6027,
+            "avg": 0.0019,
+            "median": 0.0028
+          },
+          "5s": {
+            "n": 375,
+            "up_rate": 0.6347,
+            "avg": 0.0054,
+            "median": 0.0076
+          },
+          "10s": {
+            "n": 372,
+            "up_rate": 0.6532,
+            "avg": 0.0089,
+            "median": 0.0135
+          }
+        },
+        "gate_sweep": {
+          "2s": {
+            "n": 269,
+            "up_rate": 0.5948,
+            "avg": 0.0014,
+            "median": 0.0024
+          },
+          "5s": {
+            "n": 269,
+            "up_rate": 0.6283,
+            "avg": 0.0048,
+            "median": 0.0069
+          },
+          "10s": {
+            "n": 268,
+            "up_rate": 0.6082,
+            "avg": 0.0062,
+            "median": 0.0113
+          }
+        },
+        "gate_sweep_reclaim": {
+          "2s": {
+            "n": 64,
+            "up_rate": 0.5938,
+            "avg": 0.002,
+            "median": 0.0021
+          },
+          "5s": {
+            "n": 64,
+            "up_rate": 0.6406,
+            "avg": 0.0044,
+            "median": 0.008
+          },
+          "10s": {
+            "n": 64,
+            "up_rate": 0.5313,
+            "avg": 0.0032,
+            "median": 0.005
+          }
+        },
+        "gate_no_sweep": {
+          "2s": {
+            "n": 106,
+            "up_rate": 0.6226,
+            "avg": 0.0033,
+            "median": 0.0038
+          },
+          "5s": {
+            "n": 106,
+            "up_rate": 0.6509,
+            "avg": 0.0068,
+            "median": 0.0106
+          },
+          "10s": {
+            "n": 104,
+            "up_rate": 0.7692,
+            "avg": 0.0157,
+            "median": 0.0206
+          }
+        }
+      }
+    }
+  }
+}
