@@ -184,6 +184,39 @@ const gate = detectCohort(enriched, "full_gate", strategy);
   };
 }
 
+// ── F. ICT-style "liquidity sweep" filter on the daily timeframe ─────────
+// Sweep: signal day's low breaks the prior 5-session low (stop run).
+// Reclaim: the close lands in the upper half of the day's range (IBS>0.5).
+{
+  function sweptPriorLow(row) {
+    if (row.index < 5) return false;
+    let priorLow = Infinity;
+    for (let i = row.index - 5; i < row.index; i += 1) priorLow = Math.min(priorLow, enriched[i].low);
+    return row.low < priorLow;
+  }
+  function ibsValue(row) {
+    const range = row.high - row.low;
+    return range > 0 ? (row.close - row.low) / range : 0.5;
+  }
+  const out = {};
+  for (const [label, testFn] of Object.entries({
+    gate_all: () => true,
+    gate_sweep: (row) => sweptPriorLow(row),
+    gate_sweep_reclaim: (row) => sweptPriorLow(row) && ibsValue(row) > 0.5,
+    gate_no_sweep: (row) => !sweptPriorLow(row),
+  })) {
+    const rows = gate.filter(testFn);
+    out[label] = {};
+    for (const h of [2, 5, 10]) {
+      out[label][`${h}s`] = stats(rows.map((row) => fwdFromNextClose(row, h)).filter((v) => v != null));
+    }
+  }
+  report.variants.liquidity_sweep = {
+    question: "ICT-style daily liquidity sweep: does breaking the prior 5-session low (with or without an upper-half close 'reclaim') concentrate the gate's edge?",
+    results: out,
+  };
+}
+
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(join(OUT_DIR, "research_variants_v1.json"), JSON.stringify(report, null, 2) + "\n");
 console.log("Written: engine/out/research_variants_v1.json\n");
